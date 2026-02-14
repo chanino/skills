@@ -31,7 +31,7 @@ Based on the user's request, build a detailed prompt that specifies:
 ## Step 2: Generate the Reference Image
 
 ```bash
-python3 /mnt/c/Users/Noah/claude/generate_image.py "YOUR DETAILED PROMPT HERE" -o /tmp/diagram.png
+python3 scripts/generate_image.py "YOUR DETAILED PROMPT HERE" -o /tmp/diagram.png
 ```
 
 **QA check:** After generation, view the image file (`/tmp/diagram.png`) to verify:
@@ -51,7 +51,7 @@ Use `image_to_text.py` (Gemini vision) to extract a detailed structural descript
 **Call 1 — Structural layout description** (the key piece):
 
 ```bash
-python3 /mnt/c/Users/Noah/claude/image_to_text.py -i /tmp/diagram.png "Describe the structural layout of this technical diagram in precise detail. For every shape: state its type (rectangle, rounded rectangle, diamond, oval, cylinder, cloud), approximate position (left/center/right, top/middle/bottom), approximate size relative to the slide, fill color, border color, and the exact text label inside it. For every arrow or connector: state its start element, end element, direction, line style (solid, dashed), arrowhead style, and any label text. For any background grouping boxes: state their position, size, fill color, border color, and label. For any divider lines: state orientation, position, and style. For standalone text labels: state their content, position, and styling. Describe the overall layout grid (how many columns/rows, spacing pattern)."
+python3 scripts/image_to_text.py -i /tmp/diagram.png "Describe the structural layout of this technical diagram in precise detail. For every shape: state its type (rectangle, rounded rectangle, diamond, oval, cylinder, cloud), approximate position (left/center/right, top/middle/bottom), approximate size relative to the slide, fill color, border color, and the exact text label inside it. For every arrow or connector: state its start element, end element, direction, line style (solid, dashed), arrowhead style, and any label text. For any background grouping boxes: state their position, size, fill color, border color, and label. For any divider lines: state orientation, position, and style. For standalone text labels: state their content, position, and styling. Describe the overall layout grid (how many columns/rows, spacing pattern)."
 ```
 
 Save the output to `/tmp/diagram-layout.txt`.
@@ -59,7 +59,7 @@ Save the output to `/tmp/diagram-layout.txt`.
 **Call 2 — Alt text** (accessibility summary):
 
 ```bash
-python3 /mnt/c/Users/Noah/claude/image_to_text.py -i /tmp/diagram.png "Describe this technical diagram in 2-3 sentences for screen reader alt text. Focus on the type of diagram, the key components shown, and the main relationships or data flow depicted."
+python3 scripts/image_to_text.py -i /tmp/diagram.png "Describe this technical diagram in 2-3 sentences for screen reader alt text. Focus on the type of diagram, the key components shown, and the main relationships or data flow depicted."
 ```
 
 Review the output and trim to a concise 2-3 sentence alt text summary.
@@ -67,7 +67,7 @@ Review the output and trim to a concise 2-3 sentence alt text summary.
 **Call 3 — Full description** (for `.description.md`):
 
 ```bash
-python3 /mnt/c/Users/Noah/claude/image_to_text.py -i /tmp/diagram.png "Provide a detailed description of this technical diagram. Describe each component, their relationships, data flows, and the overall purpose of the diagram."
+python3 scripts/image_to_text.py -i /tmp/diagram.png "Provide a detailed description of this technical diagram. Describe each component, their relationships, data flows, and the overall purpose of the diagram."
 ```
 
 ## Step 4: Create JSON Shape Specification
@@ -106,7 +106,7 @@ This is the core step. You will translate the **structural text description** fr
 Run the build script with the `--json` flag to generate native shapes:
 
 ```bash
-node /home/noah/.claude/skills/pptx-diagram/scripts/build_slide.js \
+node scripts/build_slide.js \
   --json /tmp/diagram-spec.json \
   --output output.pptx
 ```
@@ -124,7 +124,7 @@ All other metadata (title, subtitle, colors, footer, alt text, description) come
 The old `--image` mode still works for embedding a flat PNG:
 
 ```bash
-node /home/noah/.claude/skills/pptx-diagram/scripts/build_slide.js \
+node scripts/build_slide.js \
   --image /tmp/diagram.png \
   --title "DIAGRAM TITLE" \
   --alt-text "ALT TEXT" \
