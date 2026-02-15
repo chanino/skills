@@ -219,11 +219,12 @@ function renderShape(slide, pres, shapeMap, el) {
     },
   };
   if (el.rectRadius) opts.rectRadius = el.rectRadius;
+  if (el.rotate != null) opts.rotate = el.rotate;
 
   const shadow = buildShadow(el.shadow);
   if (shadow) opts.shadow = shadow;
 
-  if (el.label) {
+  if (el.label || el.textRuns) {
     const textOpts = {
       ...opts,
       shape: shapeType,
@@ -233,15 +234,58 @@ function renderShape(slide, pres, shapeMap, el) {
       bold: el.fontBold || false,
       italic: el.fontItalic || false,
       underline: el.fontUnderline || false,
-      align: "center",
-      valign: "middle",
-      margin: [3, 5, 3, 5],
+      align: el.align || "center",
+      valign: el.valign || "middle",
+      margin: el.margin || [5, 8, 5, 8],
     };
-    if (el.fit === "shrink") textOpts.fit = "shrink";
-    slide.addText(el.label, textOpts);
+    textOpts.fit = el.fit || "shrink";
+    if (el.wrap != null) textOpts.wrap = el.wrap;
+    if (el.charSpacing != null) textOpts.charSpacing = el.charSpacing;
+    if (el.lineSpacing != null) textOpts.lineSpacing = el.lineSpacing;
+    if (el.lineSpacingMultiple != null) textOpts.lineSpacingMultiple = el.lineSpacingMultiple;
+    if (el.paraSpaceAfter != null) textOpts.paraSpaceAfter = el.paraSpaceAfter;
+    if (el.paraSpaceBefore != null) textOpts.paraSpaceBefore = el.paraSpaceBefore;
+    if (el.glow) textOpts.glow = { color: (el.glow.color || "000000").replace(/^#/, ""), size: el.glow.size || 2, opacity: el.glow.opacity || 0.35 };
+    if (el.textOutline) textOpts.outline = { color: (el.textOutline.color || "000000").replace(/^#/, ""), size: el.textOutline.size || 0.5 };
+
+    if (el.textRuns) {
+      // Rich text: array of text run objects with mixed formatting
+      const runs = el.textRuns.map((run) => ({
+        text: run.text || "",
+        options: {
+          fontSize: run.fontSize || el.fontSize || 10,
+          fontFace: run.fontFace || el.fontFace || "Calibri",
+          color: (run.fontColor || el.fontColor || "333333").replace(/^#/, ""),
+          bold: run.bold != null ? run.bold : false,
+          italic: run.italic != null ? run.italic : false,
+          breakLine: run.breakLine || false,
+          ...(run.charSpacing != null ? { charSpacing: run.charSpacing } : {}),
+        },
+      }));
+      slide.addText(runs, textOpts);
+    } else {
+      slide.addText(el.label, textOpts);
+    }
   } else {
     slide.addShape(shapeType, opts);
   }
+}
+
+function renderConnectorLabel(slide, el, cx, cy) {
+  const labelColor = (el.labelColor || "666666").replace(/^#/, "");
+  const labelW = el.labelW || Math.max(0.5, Math.min(2.5, el.label.length * 0.08 + 0.2));
+  const ox = el.labelOffset || 0;
+  const labelOpts = {
+    x: cx - labelW / 2 + ox, y: cy - 0.15, w: labelW, h: 0.25,
+    fontSize: el.labelFontSize || 8,
+    color: labelColor,
+    align: "center", valign: "middle",
+    fontFace: el.fontFace || "Calibri",
+    italic: el.labelItalic || false,
+    fit: "shrink",
+  };
+  if (el.labelCharSpacing != null) labelOpts.charSpacing = el.labelCharSpacing;
+  slide.addText(el.label, labelOpts);
 }
 
 function renderConnector(slide, pres, el, elementPositions) {
@@ -307,14 +351,7 @@ function renderConnector(slide, pres, el, elementPositions) {
         lx = x1;
         ly = y1 + dy / 2;
       }
-      const labelColor = (el.labelColor || "666666").replace(/^#/, "");
-      slide.addText(el.label, {
-        x: lx - 0.5, y: ly - 0.2, w: 1.0, h: 0.25,
-        fontSize: el.labelFontSize || 8,
-        color: labelColor,
-        align: "center", valign: "middle",
-        fontFace: el.fontFace || "Calibri",
-      });
+      renderConnectorLabel(slide, el, lx, ly);
     }
   } else {
     // Straight connector (default)
@@ -339,14 +376,7 @@ function renderConnector(slide, pres, el, elementPositions) {
     if (el.label) {
       const mx = (x1 + x2) / 2;
       const my = (y1 + y2) / 2;
-      const labelColor = (el.labelColor || "666666").replace(/^#/, "");
-      slide.addText(el.label, {
-        x: mx - 0.5, y: my - 0.2, w: 1.0, h: 0.25,
-        fontSize: el.labelFontSize || 8,
-        color: labelColor,
-        align: "center", valign: "middle",
-        fontFace: el.fontFace || "Calibri",
-      });
+      renderConnectorLabel(slide, el, mx, my);
     }
   }
 }
@@ -367,8 +397,35 @@ function renderText(slide, el) {
     align: el.align || "left",
     valign: el.valign || "middle",
   };
-  if (el.fit === "shrink") opts.fit = "shrink";
-  slide.addText(el.text || "", opts);
+  opts.fit = el.fit || "shrink";
+  if (el.wrap != null) opts.wrap = el.wrap;
+  if (el.margin) opts.margin = el.margin;
+  if (el.charSpacing != null) opts.charSpacing = el.charSpacing;
+  if (el.lineSpacing != null) opts.lineSpacing = el.lineSpacing;
+  if (el.lineSpacingMultiple != null) opts.lineSpacingMultiple = el.lineSpacingMultiple;
+  if (el.paraSpaceAfter != null) opts.paraSpaceAfter = el.paraSpaceAfter;
+  if (el.paraSpaceBefore != null) opts.paraSpaceBefore = el.paraSpaceBefore;
+  if (el.rotate != null) opts.rotate = el.rotate;
+  if (el.glow) opts.glow = { color: (el.glow.color || "000000").replace(/^#/, ""), size: el.glow.size || 2, opacity: el.glow.opacity || 0.35 };
+  if (el.textOutline) opts.outline = { color: (el.textOutline.color || "000000").replace(/^#/, ""), size: el.textOutline.size || 0.5 };
+
+  if (el.textRuns) {
+    const runs = el.textRuns.map((run) => ({
+      text: run.text || "",
+      options: {
+        fontSize: run.fontSize || el.fontSize || 11,
+        fontFace: run.fontFace || el.fontFace || "Calibri",
+        color: (run.fontColor || el.fontColor || "1E293B").replace(/^#/, ""),
+        bold: run.bold != null ? run.bold : false,
+        italic: run.italic != null ? run.italic : false,
+        breakLine: run.breakLine || false,
+        ...(run.charSpacing != null ? { charSpacing: run.charSpacing } : {}),
+      },
+    }));
+    slide.addText(runs, opts);
+  } else {
+    slide.addText(el.text || "", opts);
+  }
 }
 
 function renderDivider(slide, pres, el) {
@@ -402,45 +459,58 @@ function renderGroup(slide, pres, el) {
   const fill = (el.fill || "F0F4F8").replace(/^#/, "");
   const lineColor = (el.lineColor || "CBD5E1").replace(/^#/, "");
 
+  const shapeType = el.rectRadius ? pres.shapes.ROUNDED_RECTANGLE : pres.shapes.RECTANGLE;
   const opts = {
     x: el.x,
     y: el.y,
     w: el.w,
     h: el.h,
     fill: { color: fill, transparency: el.fillTransparency || 0 },
-    line: {
+  };
+
+  // Borderless mode: no line at all (consulting pattern where shadow defines edges)
+  if (el.borderless || el.lineWidth === 0) {
+    opts.line = { width: 0 };
+  } else {
+    opts.line = {
       color: lineColor,
       width: el.lineWidth || 1,
       dashType: el.lineDash || "solid",
-    },
-  };
+    };
+  }
+
+  if (el.rectRadius) opts.rectRadius = el.rectRadius;
 
   const shadow = buildShadow(el.shadow);
   if (shadow) opts.shadow = shadow;
 
-  slide.addShape(pres.shapes.RECTANGLE, opts);
+  slide.addShape(shapeType, opts);
 
   if (el.label) {
     const labelColor = (el.labelColor || "64748B").replace(/^#/, "");
     const pos = el.labelPosition || "topLeft";
-    const lx = pos.includes("Right") ? el.x + el.w - 1.5 : el.x + 0.1;
+    const labelW = el.labelW || Math.min(el.w - 0.2, Math.max(1.5, el.label.length * 0.1));
+    const lx = pos.includes("Right") ? el.x + el.w - labelW - 0.1 : el.x + 0.1;
     const ly = pos.includes("bottom") || pos.includes("Bottom")
       ? el.y + el.h - 0.3
       : el.y + 0.05;
     const align = pos.includes("Right") ? "right" : "left";
 
-    slide.addText(el.label, {
+    const labelOpts = {
       x: lx,
       y: ly,
-      w: 1.5,
+      w: labelW,
       h: 0.25,
       fontSize: el.labelFontSize || 9,
       fontFace: el.fontFace || "Calibri",
       color: labelColor,
-      bold: false,
+      bold: el.labelBold || false,
       align,
       valign: "top",
-    });
+    };
+    if (el.labelCharSpacing != null) labelOpts.charSpacing = el.labelCharSpacing;
+    labelOpts.fit = "shrink";
+    slide.addText(el.label, labelOpts);
   }
 }
 
@@ -464,28 +534,34 @@ async function buildSlideFromJson(spec) {
     fill: { color: spec.meta.titleBgColor },
   });
 
+  const titleCharSpacing = spec.meta.titleCharSpacing != null ? spec.meta.titleCharSpacing : 1.5;
+  const titleOpts = {
+    fontSize: spec.meta.titleFontSize || 20,
+    fontFace: spec.meta.titleFontFace || "Calibri",
+    color: spec.meta.titleColor,
+    bold: true,
+  };
+  if (titleCharSpacing) titleOpts.charSpacing = titleCharSpacing;
+
   const titleTextParts = [
     {
       text: spec.meta.title,
-      options: {
-        fontSize: 20,
-        fontFace: "Calibri",
-        color: spec.meta.titleColor,
-        bold: true,
-      },
+      options: titleOpts,
     },
   ];
 
   if (spec.meta.subtitle) {
     titleTextParts[0].options.breakLine = true;
+    const subtitleOpts = {
+      fontSize: spec.meta.subtitleFontSize || 12,
+      fontFace: spec.meta.titleFontFace || "Calibri",
+      color: (spec.meta.subtitleColor || spec.meta.titleColor).replace(/^#/, ""),
+      bold: false,
+    };
+    if (spec.meta.subtitleCharSpacing != null) subtitleOpts.charSpacing = spec.meta.subtitleCharSpacing;
     titleTextParts.push({
       text: spec.meta.subtitle,
-      options: {
-        fontSize: 12,
-        fontFace: "Calibri",
-        color: spec.meta.titleColor,
-        bold: false,
-      },
+      options: subtitleOpts,
     });
   }
 

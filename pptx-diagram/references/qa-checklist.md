@@ -64,6 +64,8 @@ x[i] = X + gap + i * (shapeWidth + gap)
 
 **What to look for:** Icons missing (blank space where icon should be), invisible (wrong color on matching background), or wrong size.
 
+**For architecture/cloud/network diagrams:** Verify that major components (3+ shapes) have associated icons. If the reference image shows icons, the spec must include them. Missing icons are the #1 cause of the PPTX looking "flat" compared to reference images.
+
 **Typical fix:**
 - Missing: verify `name` matches a valid react-icons export (check `icon-catalog.md`)
 - Invisible: change `color` to contrast with the background (dark icon on light bg, or vice versa)
@@ -127,20 +129,140 @@ x[i] = X + gap + i * (shapeWidth + gap)
 
 **Typical fix:** Use the same `fontFace` throughout the diagram. Default is `"Calibri"`. Only vary font if deliberately using a different face for labels vs. shape text.
 
+## 12. Visual Weight Hierarchy
+
+**What to look for:** All shapes at the same visual weight — same shadow, same border, same fill intensity. Primary shapes should visually "pop" more than secondary shapes.
+
+**Typical fix:** Apply the 3-tier system from shape-spec.md:
+- **Tier 1** (primary shapes): dark fill, borderless (`lineWidth: 0`), strong shadow `{ "blur": 4, "offset": 3, "opacity": 0.35 }`, bold 10-11pt, `charSpacing: 1`
+- **Tier 2** (secondary shapes): medium fill, thin border (1pt), light shadow `{ "blur": 2, "offset": 1, "opacity": 0.2 }`, regular 9-10pt
+- **Tier 3** (groups/backgrounds): very light fill, subtle or no border, soft shadow `{ "blur": 6, "offset": 4, "opacity": 0.12 }`, 8-9pt italic
+
+```json
+// Before: all shapes identical weight
+{ "fill": "3B82F6", "lineWidth": 1, "shadow": { "blur": 3, "offset": 2, "opacity": 0.3 } }
+{ "fill": "3B82F6", "lineWidth": 1, "shadow": { "blur": 3, "offset": 2, "opacity": 0.3 } }
+
+// After: Tier 1 vs Tier 2 distinction
+{ "fill": "2E5090", "lineWidth": 0, "shadow": { "blur": 4, "offset": 3, "opacity": 0.35 }, "fontBold": true, "charSpacing": 1 }
+{ "fill": "5B8DB8", "lineWidth": 1, "shadow": { "blur": 2, "offset": 1, "opacity": 0.2 } }
+```
+
+## 13. Color Palette Quality
+
+**What to look for:** Bright saturated primary colors (`3B82F6`, `EF4444`, `10B981`, `F59E0B`). More than 3 fill colors. Colors that look "developer-grade" rather than muted and professional.
+
+**Typical fix:** Replace saturated colors with consulting palette equivalents:
+
+| Saturated (avoid) | Muted replacement |
+|-------------------|-------------------|
+| `3B82F6` (bright blue) | `2E5090` or `334155` |
+| `EF4444` (bright red) | `7C3A2D` |
+| `10B981` (bright green) | `1B5E42` |
+| `F59E0B` (bright amber) | `C4A35A` or `D4A847` |
+| `22C55E` (green) | `3D8B6E` |
+| `F97316` (orange) | `C4A35A` |
+| `34D399` (teal) | `5B8DB8` |
+
+Pick one consulting palette from shape-spec.md (Corporate Blue, Warm Professional, Modern Slate, or Forest Green) and apply consistently. Maximum 3 fill colors per diagram.
+
+## 14. Typography & Spacing Polish
+
+**What to look for:** Tight text margins, no character spacing on key labels, shapes crammed together (less than 0.3" gaps), inconsistent alignment.
+
+**Typical fix:**
+- Add `charSpacing: 1` to primary shape labels and group labels
+- Increase shape text margins from `[3,5,3,5]` to `[8,10,8,10]` for breathing room
+- Ensure minimum 0.4" gap between adjacent shapes
+- Use `textRuns` for shapes that need title + subtitle formatting
+- Add `charSpacing: 1.5` to slide title via `meta.titleCharSpacing`
+
+```json
+// Before: cramped
+{ "margin": [3, 5, 3, 5], "x": 2.0 }
+{ "x": 3.5 }  // only 0.0" gap (shape ends at 3.5 if w=1.5)
+
+// After: generous
+{ "margin": [8, 10, 8, 10], "charSpacing": 1, "x": 2.0, "w": 1.5 }
+{ "x": 3.9 }  // 0.4" gap
+```
+
+**Note:** Text glow and text outline effects may not render in LibreOffice headless PNG export but will appear correctly when opening the PPTX in PowerPoint.
+
+## 15. Text-to-Shape Fit
+
+**What to look for:** Text cramped inside shapes. Shapes too narrow for their label text. textRuns shapes smaller than 2.0" × 0.8". Diamonds smaller than 1.8" × 1.0".
+
+**Typical fix:** Apply minimum size rules:
+- Shape with `label`: min `w` = `max(1.5, label.length * 0.13)` at fontSize 10
+- Shape with `textRuns`: min `w` = 2.0", min `h` = 0.8"
+- Diamond: min 1.8" × 1.0"
+- Cylinder: min `h` = 1.0"
+
+```json
+// Before: too small for text
+{ "shapeType": "diamond", "w": 1.0, "h": 0.8, "label": "Approve?" }
+
+// After: meets minimum
+{ "shapeType": "diamond", "w": 1.8, "h": 1.0, "label": "Approve?" }
+```
+
+## 16. Swim Lane Label Placement
+
+**What to look for:** Lane names rendered inside groups via `group.label` — these often overflow or overlap group contents. Phase headers embedded in groups instead of positioned independently above.
+
+**Typical fix:** Use the external label pattern:
+1. Groups have NO `label` property
+2. Separate `text` elements for lane names, positioned LEFT of groups (`x: 0.1, w: 1.6, align: "right"`)
+3. Groups start at `x: 1.8` to leave room
+4. Phase headers as separate `text` elements ABOVE the diagram area
+
+```json
+// Before: label inside group (overflows narrow groups)
+{ "type": "group", "x": 1.8, "y": 1.0, "w": 8.0, "h": 1.2, "label": "Incident Commander" }
+
+// After: separate text element outside group
+{ "type": "group", "x": 1.8, "y": 1.0, "w": 8.0, "h": 1.2 },
+{ "type": "text", "x": 0.1, "y": 1.0, "w": 1.6, "h": 1.2, "text": "Incident Commander", "align": "right", "fontBold": true }
+```
+
+## 17. Connector Label Overlap
+
+**What to look for:** Connector labels overlapping shapes they connect. Labels clipped by nearby elements. Labels too narrow for their text.
+
+**Typical fix:**
+- Use `labelOffset` to shift the label along the connector path away from shapes
+- Use `labelW` to override auto-calculated label width if needed
+- Increase spacing between connected shapes
+
+```json
+// Before: label overlaps target shape
+{ "type": "connector", "from": "a", "to": "b", "label": "Long Label Text" }
+
+// After: shift label and override width
+{ "type": "connector", "from": "a", "to": "b", "label": "Long Label Text", "labelOffset": -0.3, "labelW": 1.5 }
+```
+
 ---
 
 ## Quick Reference
 
-| Check | Pass Criteria |
-|-------|--------------|
-| Overlap | No shapes/labels/icons overlap |
-| Text overflow | All labels fully visible within shapes |
-| Bounds | All elements within 0–10" horizontal, 0.85–5.35" vertical |
-| Spacing | Consistent gaps within rows/columns (±0.1" tolerance) |
-| Icons | All icon elements visible and correctly sized |
-| Connectors | Arrows start/end at shape edges, labels clear of shapes |
-| Contrast | All text readable against its background |
-| Reference match | Layout structurally matches reference image |
-| Shadow consistency | Shadows applied uniformly across similar shapes |
-| Connector anchoring | Connectors visually connect to shape edges |
-| Font consistency | Same fontFace used throughout unless intentionally varied |
+| # | Check | Pass Criteria |
+|---|-------|--------------|
+| 1 | Overlap | No shapes/labels/icons overlap |
+| 2 | Text overflow | All labels fully visible within shapes |
+| 3 | Bounds | All elements within 0–10" horizontal, 0.85–5.35" vertical |
+| 4 | Spacing | Consistent gaps within rows/columns (±0.1" tolerance) |
+| 5 | Icons | All icon elements visible and correctly sized; architecture diagrams have icons on major components |
+| 6 | Connectors | Arrows start/end at shape edges, labels clear of shapes |
+| 7 | Contrast | All text readable against its background |
+| 8 | Reference match | Layout structurally matches reference image |
+| 9 | Shadow consistency | Shadows applied uniformly across similar shapes |
+| 10 | Connector anchoring | Connectors visually connect to shape edges |
+| 11 | Font consistency | Same fontFace used throughout unless intentionally varied |
+| 12 | Visual weight | Primary shapes visually heavier than secondary (shadow, fill, border) |
+| 13 | Palette quality | Max 3 fill colors, all muted/desaturated, no bright primaries |
+| 14 | Typography polish | charSpacing on labels, adequate margins (≥[8,10,8,10]), ≥0.4" inter-shape gaps |
+| 15 | Text-to-shape fit | Shapes wide enough for labels, textRuns ≥ 2.0"×0.8", diamonds ≥ 1.8"×1.0" |
+| 16 | Swim lane labels | Lane names are separate text elements outside groups, not group.label |
+| 17 | Connector label overlap | Labels don't overlap shapes; use labelOffset to shift if needed |

@@ -21,7 +21,7 @@ Read the prompt engineering guide at `references/diagram-prompts.md` for pattern
 Based on the user's request, build a detailed prompt that specifies:
 - Diagram type (architecture, flowchart, network, sequence, ER, data flow, CONOPS, etc.)
 - All components and their relationships
-- Clean, flat, modern design style
+- Clean, consulting-grade design style with muted, desaturated colors
 - White background, 16:9 aspect ratio
 - Readable text labels on all elements
 - Limited color palette (2-3 colors)
@@ -51,7 +51,7 @@ Use `image_to_text.py` (Gemini vision) to extract a detailed structural descript
 **Call 1 — Structural layout description** (the key piece):
 
 ```bash
-python3 scripts/image_to_text.py -i /tmp/diagram.png "Describe the structural layout of this technical diagram in precise detail. For every shape: state its type (rectangle, rounded rectangle, diamond, oval, cylinder, cloud), approximate position (left/center/right, top/middle/bottom), approximate size relative to the slide, fill color, border color, and the exact text label inside it. For every arrow or connector: state its start element, end element, direction, line style (solid, dashed), arrowhead style, and any label text. For any background grouping boxes: state their position, size, fill color, border color, and label. For any divider lines: state orientation, position, and style. For standalone text labels: state their content, position, and styling. For any icons: describe their type (person, server, database, cloud, shield, lock, etc.) and position relative to nearby shapes. Describe the overall layout grid (how many columns/rows, spacing pattern)."
+python3 scripts/image_to_text.py -i /tmp/diagram.png "Describe the structural layout of this technical diagram in precise detail. For every shape: state its type (rectangle, rounded rectangle, diamond, oval, cylinder, cloud), approximate position (left/center/right, top/middle/bottom), approximate size relative to the slide, fill color, border color, and the exact text label inside it. For every arrow or connector: state its start element, end element, direction, line style (solid, dashed), arrowhead style, and any label text. For any background grouping boxes: state their position, size, fill color, border color, and label. For any divider lines: state orientation, position, and style. For standalone text labels: state their content, position, and styling. For any icons or visual symbols: describe their type (server, database, cloud, shield, lambda, bucket, etc.), position relative to their shape, and approximate size. For any description or annotation text below shapes: capture the exact text content. Describe the overall layout grid (how many columns/rows, spacing pattern)."
 ```
 
 Save the output to `/tmp/diagram-layout.txt`.
@@ -98,13 +98,52 @@ This is the core step. You will translate the **structural text description** fr
 - **Assign `id` to every shape that will have connectors.** Use `from`/`to` connector anchoring with `fromSide`/`toSide` instead of manual coordinate calculation — this is the single most effective way to eliminate visual errors
 - Use `connector` for arrows between shapes. Prefer shape-anchored mode (`from`/`to`) over absolute coordinates (`x1,y1,x2,y2`)
 - Use `"route": "elbow"` for connectors that need orthogonal L-shaped paths
-- **Add `shadow` to primary shapes for visual depth.** Use consistent shadow settings: `{ "blur": 3, "offset": 2, "angle": 45, "opacity": 0.3 }`
+- **Select a consulting palette** from shape-spec.md (Corporate Blue, Warm Professional, Modern Slate, or Forest Green). Use max 3 fill colors. **Never use bright saturated primaries** (`3B82F6`, `EF4444`, `10B981`, `F59E0B`)
+- **Apply visual weight hierarchy** — use the 3-tier shadow/border system from shape-spec.md: Tier 1 (primary: dark fill, borderless, strong shadow), Tier 2 (secondary: medium fill, thin border, light shadow), Tier 3 (backgrounds: light fill, soft shadow)
+- **Typography polish** — add `charSpacing: 1` on primary shape labels, `charSpacing: 1.5` on title via `meta.titleCharSpacing`, use `margin: [8,10,8,10]` for breathing room inside shapes
+- **Generous spacing** — minimum 0.4" gap between adjacent shapes, 0.2" padding inside groups
+- Use `textRuns` for primary shapes that need title + subtitle formatting (e.g., service name + version or role)
 - Use `text` for standalone labels (lane names, phase headers, annotations)
 - Use `divider` for separator lines
-- Use `icon` for visual icons (server, database, cloud, user, etc.) — see `references/icon-catalog.md` for names. Icons are optional — skip if the description doesn't clearly call for them or if unsure which icon to use
+- Use `icon` for visual icons — **strongly recommended** for architecture, cloud, and network diagrams. Place a 0.35"×0.35" icon above or inside each major shape. See `references/icon-catalog.md` for names. Skip only for abstract concepts with no clear icon mapping
 - Map described elements to appropriate shape types using the structural description
-- Use consistent spacing: 0.2" gaps between shapes, 0.1" padding inside groups
-- Use `fontFace` for font control (default: "Calibri"), `fontItalic`/`fontUnderline` for styling, `fit: "shrink"` to prevent text overflow
+- Use `fontFace` for font control (default: "Calibri"), `fontItalic`/`fontUnderline` for styling. Text auto-shrinks to fit by default (`fit: "shrink"`) — this is a safety net, not a substitute for proper sizing
+
+**Minimum shape sizes:**
+- Shape with `label`: min `w` = `max(1.5, label.length * 0.13)` at fontSize 10
+- Shape with `textRuns`: min `w` = 2.0", min `h` = 0.8"
+- Diamond: min 1.8" × 1.0"
+- Cylinder: min `h` = 1.0"
+- Architecture diagram shapes: min `w` = 1.8", recommended 2.0"+ to accommodate icon + label
+- Leave 0.05" gap between icon and shape top, 0.05" gap between shape bottom and description text
+- Always rely on default `fit: "shrink"` as safety net
+
+**Component stack pattern** (architecture diagrams):
+For each major component, create a vertical stack:
+1. `icon` element (0.35" × 0.35") centered above the shape
+2. `shape` element with bold service name (min 1.8" wide)
+3. `text` element below with 1-2 line italic description (fontSize 7, fontColor "64748B")
+
+Example — one Lambda component:
+  icon:  { x: 5.55, y: 1.5, w: 0.35, h: 0.35, name: "FaCode", color: "FFFFFF" }
+  shape: { x: 5.0,  y: 1.9, w: 1.8,  h: 0.6,  label: "Products Lambda" }
+  text:  { x: 5.0,  y: 2.55, w: 1.8, h: 0.4, text: "Product Catalog\nLogic & Management", fontSize: 7, fontItalic: true, align: "center" }
+
+This pattern makes diagrams instantly scannable — users recognize components by icon before reading text.
+
+**Description text:** For architecture and cloud diagrams, add a small italic `text` element (fontSize 7-8, fontColor "64748B") below each major shape with a 1-2 line role description. This is what makes reference images feel information-rich.
+
+**Swim lane pattern:** For CONOPS/swim lane diagrams:
+1. Create `group` elements for lane backgrounds with NO `label`
+2. Create separate `text` elements for lane names positioned LEFT of the groups (`x: 0.2, w: 1.5, align: "right"`)
+3. Start groups at `x: 1.8` to leave room for lane name text
+4. Create separate `text` elements for phase headers ABOVE the diagram area
+
+**Connector routing strategy:**
+- Horizontal flows: straight connectors, `fromSide: "right"` → `toSide: "left"`
+- Vertical flows: straight connectors, `fromSide: "bottom"` → `toSide: "top"`
+- Cross-lane: use `route: "elbow"`
+- Use `labelOffset` to shift labels away from shape overlap
 
 ## Step 5: Build the PPTX
 
@@ -161,6 +200,12 @@ View the converted PNG and run through the QA checklist (`references/qa-checklis
 9. **Shadow consistency** — if shadows are used, are they applied uniformly?
 10. **Connector anchoring** — do connectors visually connect to shape edges?
 11. **Font consistency** — is the same fontFace used throughout?
+12. **Visual weight hierarchy** — do primary shapes visually "pop" more than secondary shapes?
+13. **Color palette quality** — max 3 fill colors, all muted/desaturated, no bright primaries (`3B82F6`, `EF4444`)?
+14. **Typography & spacing polish** — `charSpacing` on labels, adequate margins, ≥0.4" inter-shape gaps?
+15. **Text-to-shape fit** — shapes wide enough for labels, textRuns shapes ≥ 2.0" × 0.8", diamonds ≥ 1.8" × 1.0"?
+16. **Swim lane label placement** — lane names are separate `text` elements outside groups, not `group.label`? Phase headers are independent `text` elements?
+17. **Connector label overlap** — labels don't overlap shapes? Use `labelOffset` to shift if needed?
 
 ### 6c. Fix and rebuild
 

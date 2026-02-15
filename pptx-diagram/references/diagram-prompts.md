@@ -27,9 +27,14 @@ Create a [DIAGRAM TYPE] diagram showing [SUBJECT].
 Components: [LIST KEY COMPONENTS]
 Relationships: [DESCRIBE CONNECTIONS/FLOW]
 
-Style: Clean, flat, modern design. White background. 16:9 aspect ratio.
+Style: Clean, sophisticated, consulting-grade design.
+- Muted, desaturated color palette — navy blue (#2E5090), slate gray (#64748B),
+  warm gold (#C4A35A). NO bright primary colors (#3B82F6, #EF4444, etc.).
+- Generous whitespace between all elements (0.4" minimum gaps)
+- Minimal borders — shapes defined by subtle drop shadows, not outlines
+- Clear visual hierarchy: primary elements larger and darker, secondary lighter
+- White background, 16:9 aspect ratio
 Use readable text labels on all components. No decorative elements.
-Professional technical diagram style with clear hierarchy.
 Limit to [N] major components for readability.
 ```
 
@@ -39,9 +44,12 @@ Limit to [N] major components for readability.
 - **Text labels**: Always specify "readable text labels" — without this, AI may generate illegible or blurry text.
 - **White background**: Always specify for clean PPTX embedding.
 - **16:9 ratio**: Always specify to match slide dimensions.
-- **Flat modern design**: Avoids 3D effects, gradients, and skeuomorphic elements that look dated.
-- **Color**: Specify a limited palette (2-3 colors) for cohesion. Blues and grays are safe defaults for technical diagrams.
-- **Spacing**: Mention "well-spaced" or "generous whitespace" to avoid cramped layouts.
+- **Muted palette**: Use desaturated, professional colors (navy, slate, gold, forest green). NEVER use bright saturated primaries (#3B82F6, #EF4444, #10B981). See `shape-spec.md` consulting palettes.
+- **Borderless shapes**: Specify "shapes defined by shadows, not outlines" for a consulting look.
+- **Generous spacing**: Mention "generous whitespace" and "well-spaced" — cramped layouts look amateur.
+- **Visual hierarchy**: Specify that primary elements should be larger, darker, and have stronger shadows than secondary elements.
+- **Shadow depth**: Use "subtle drop shadows for depth" rather than flat shapes or heavy borders.
+- **Color**: Specify a limited palette (2-3 fill colors max) for cohesion. Pick from the consulting palettes in shape-spec.md.
 - **No watermarks**: Specify "no watermarks, no stock photo artifacts."
 
 ---
@@ -66,7 +74,7 @@ Components:
 Show data flow between components with labeled arrows.
 Group related components in bounded boxes (e.g., "Cloud Infrastructure", "Client Side").
 
-Style: Flat modern design, white background, 16:9 ratio.
+Style: Consulting-grade design, muted desaturated palette, white background, 16:9 ratio. Shapes defined by shadows, not heavy borders.
 Use a blue/gray color palette. Rounded rectangles for services, cylinders for databases.
 All text must be crisp and readable. Maximum 10 components.
 ```
@@ -88,7 +96,7 @@ Show network flow from users through CDN → load balancer → compute → datab
 Use nested bounded boxes for region → VPC → subnet hierarchy.
 Label each subnet as public or private. Show security group boundaries with dashed lines.
 
-Style: Flat modern design, white background, 16:9 ratio.
+Style: Consulting-grade design, muted desaturated palette, white background, 16:9 ratio. Shapes defined by shadows, not heavy borders.
 Use provider-appropriate color palette (e.g., orange for AWS, blue for Azure).
 Rounded rectangles for services, cylinders for databases, cloud shape for CDN.
 All text must be crisp and readable. Maximum 10-12 components.
@@ -111,7 +119,7 @@ Show vertical arrows for request/response flow between layers.
 Each layer is a full-width horizontal band with components inside.
 Label the layer names on the left side.
 
-Style: Flat modern design, white background, 16:9 ratio.
+Style: Consulting-grade design, muted desaturated palette, white background, 16:9 ratio. Shapes defined by shadows, not heavy borders.
 Use progressively deeper blue shading from top to bottom.
 All text must be crisp and readable. Maximum 4 layers, 3-4 components per layer.
 ```
@@ -139,7 +147,7 @@ Show each system as a bounded box. Place the integration hub/middleware in the c
 Use solid arrows for synchronous (REST/SOAP) and dashed arrows for asynchronous (queues/events).
 Label each arrow with the protocol or integration method.
 
-Style: Flat modern design, white background, 16:9 ratio.
+Style: Consulting-grade design, muted desaturated palette, white background, 16:9 ratio. Shapes defined by shadows, not heavy borders.
 Blue for internal systems, green for external/third-party systems, gray for middleware.
 All text must be crisp and readable. Maximum 8 systems.
 ```
@@ -150,7 +158,7 @@ All text must be crisp and readable. Maximum 8 systems.
 - **Solid arrows** for synchronous communication, **dashed arrows** for async
 - **Cylinder shapes** for databases and data stores
 - **Cloud shapes** for external/SaaS services
-- **Color-code** by concern: blue for compute, green for data, orange for external
+- **Color-code** by visual weight: Primary palette color for key compute, Secondary for data/supporting, Accent for external/decision points
 
 ---
 
@@ -184,7 +192,7 @@ Show handoffs between lanes with arrows. Mark decision points with diamonds.
 Distinguish automated steps (dashed borders) from manual steps (solid borders).
 Label phase boundaries with vertical divider lines.
 
-Style: Flat modern design, white background, 16:9 ratio.
+Style: Consulting-grade design, muted desaturated palette, white background, 16:9 ratio. Shapes defined by shadows, not heavy borders.
 Blue for human activities, green for automated activities, orange for decision points.
 All text must be crisp and readable. Maximum 4 lanes, 4 phases.
 ```
@@ -211,7 +219,7 @@ Show each phase as a large rounded rectangle containing its activities as bullet
 Connect phases with thick arrows. Place diamond-shaped decision gates between phases.
 Show the timeline arrow along the bottom. Label key inputs and outputs for each phase.
 
-Style: Flat modern design, white background, 16:9 ratio.
+Style: Consulting-grade design, muted desaturated palette, white background, 16:9 ratio. Shapes defined by shadows, not heavy borders.
 Use a blue-to-green gradient progression across phases.
 All text must be crisp and readable. Maximum 4-5 phases.
 ```
@@ -237,7 +245,7 @@ Use labeled arrows showing the direction and nature of each interaction.
 Use person icons for human actors, rectangles for systems.
 Distinguish inbound vs. outbound data flows.
 
-Style: Flat modern design, white background, 16:9 ratio.
+Style: Consulting-grade design, muted desaturated palette, white background, 16:9 ratio. Shapes defined by shadows, not heavy borders.
 Blue for the central system, gray for external systems, teal for human actors.
 All text must be crisp and readable. Maximum 6-8 surrounding entities.
 ```
@@ -269,9 +277,9 @@ Steps:
 Use standard flowchart shapes: rounded rectangles for start/end, diamonds for decisions,
 rectangles for process steps. Arrows showing flow direction with labels on decision branches.
 
-Style: Flat modern design, white background, 16:9 ratio.
+Style: Consulting-grade design, muted desaturated palette, white background, 16:9 ratio. Shapes defined by shadows, not heavy borders.
 Top-to-bottom or left-to-right flow. Readable text labels on all shapes.
-Blue for process steps, orange for decisions, green for start/end.
+Primary palette color for process steps, Accent for decisions, Primary for start/end.
 ```
 
 ### Network Diagram
@@ -288,9 +296,9 @@ Devices:
 Show connections between devices with protocol labels (e.g., HTTPS, TCP/443).
 Group devices by network zone (e.g., DMZ, Internal, External).
 
-Style: Flat modern design, white background, 16:9 ratio.
+Style: Consulting-grade design, muted palette, white background, 16:9 ratio.
 Use standard network icons (simplified). Dashed lines for zone boundaries.
-Readable labels on all devices and connections.
+Shapes defined by subtle shadows, not heavy borders. Readable labels on all devices and connections.
 ```
 
 ### Sequence Diagram
@@ -311,7 +319,7 @@ Messages:
 4. [Actor 4] → [Actor 3]: [response]
 [...]
 
-Style: Flat modern design, white background, 16:9 ratio.
+Style: Consulting-grade design, muted palette, white background, 16:9 ratio.
 Vertical lifelines, horizontal arrows with message labels.
 Readable text. Maximum 5-6 participants, 10-12 messages.
 ```
@@ -331,7 +339,7 @@ Relationships:
 - [Entity 2] many-to-many [Entity 3]
 [...]
 
-Style: Flat modern design, white background, 16:9 ratio.
+Style: Consulting-grade design, muted palette, white background, 16:9 ratio.
 Rectangles for entities, crow's foot notation for relationships.
 Primary keys underlined. Readable text labels. Maximum 8 entities.
 ```
@@ -346,7 +354,7 @@ Processes: [list processing steps]
 Data stores: [list storage]
 Data flows: [list what data moves where]
 
-Style: Flat modern design, white background, 16:9 ratio.
+Style: Consulting-grade design, muted palette, white background, 16:9 ratio.
 Circles for processes, open rectangles for data stores, squares for external entities.
 Labeled arrows for all data flows. Readable text.
 ```
@@ -356,22 +364,22 @@ Labeled arrows for all data flows. Readable text.
 ## Example Prompts
 
 **Simple architecture:**
-> Create a clean system architecture diagram showing a web application. Components: React SPA frontend, Nginx reverse proxy, Node.js API server, Redis cache, PostgreSQL database. Show request flow from user through each layer. Flat modern design, white background, 16:9 ratio, blue/gray palette, readable text labels, no watermarks.
+> Create a clean system architecture diagram showing a web application. Components: React SPA frontend, Nginx reverse proxy, Node.js API server, Redis cache, PostgreSQL database. Show request flow from user through each layer. Consulting-grade design, muted navy/slate palette (#2E5090, #5B8DB8), white background, 16:9 ratio, shapes defined by subtle shadows, generous whitespace, readable text labels, no watermarks.
 
 **Cloud architecture:**
-> Create a clean AWS cloud architecture diagram showing a serverless web app. Region us-east-1, VPC with public and private subnets. CloudFront CDN → API Gateway → Lambda functions in private subnet → DynamoDB. S3 for static assets. Cognito for auth. Nested boxes for region and VPC. Flat modern design, white background, 16:9 ratio, orange/gray AWS palette, readable text labels, no watermarks.
+> Create a clean AWS cloud architecture diagram showing a serverless web app. Region us-east-1, VPC with public and private subnets. CloudFront CDN → API Gateway → Lambda functions in private subnet → DynamoDB. S3 for static assets. Cognito for auth. Nested boxes for region and VPC. Consulting-grade design, muted professional palette, white background, 16:9 ratio, shapes defined by subtle shadows, generous whitespace, readable text labels, no watermarks.
 
 **CI/CD pipeline:**
-> Create a clean flowchart showing a CI/CD pipeline. Steps: Developer pushes code → GitHub triggers webhook → Jenkins runs tests → Decision: tests pass? Yes → Build Docker image → Push to registry → Deploy to staging → Decision: approval? Yes → Deploy to production. No paths loop back. Flat modern design, white background, 16:9 ratio, readable text labels.
+> Create a clean flowchart showing a CI/CD pipeline. Steps: Developer pushes code → GitHub triggers webhook → Jenkins runs tests → Decision: tests pass? Yes → Build Docker image → Push to registry → Deploy to staging → Decision: approval? Yes → Deploy to production. No paths loop back. Consulting-grade design, muted palette, white background, 16:9 ratio, subtle shadows, generous whitespace, readable text labels.
 
 **Microservices:**
-> Create a clean architecture diagram showing a microservices system. Services: API Gateway, User Service, Order Service, Payment Service, Notification Service. Each service has its own database. Services communicate via message queue. Show synchronous (solid arrows) and async (dashed arrows) communication. Flat modern design, white background, 16:9 ratio, limited to blue/teal palette, readable text labels.
+> Create a clean architecture diagram showing a microservices system. Services: API Gateway, User Service, Order Service, Payment Service, Notification Service. Each service has its own database. Services communicate via message queue. Show synchronous (solid arrows) and async (dashed arrows) communication. Consulting-grade design, muted navy/slate palette, white background, 16:9 ratio, shapes defined by subtle shadows, generous whitespace, readable text labels.
 
 **CONOPS swim lane:**
-> Create a clean swim lane CONOPS diagram showing an incident response operation. Lanes: Field Team, SOC Analyst, Automated SIEM, Incident Commander. Phases: Detection, Triage, Containment, Recovery. Field Team detects anomaly and reports to SOC. SIEM automatically correlates alerts. SOC Analyst triages and escalates. Incident Commander authorizes containment. Field Team executes containment, then recovery. Flat modern design, white background, 16:9 ratio, blue for human steps, green for automated, readable text labels, no watermarks.
+> Create a clean swim lane CONOPS diagram showing an incident response operation. Lanes: Field Team, SOC Analyst, Automated SIEM, Incident Commander. Phases: Detection, Triage, Containment, Recovery. Field Team detects anomaly and reports to SOC. SIEM automatically correlates alerts. SOC Analyst triages and escalates. Incident Commander authorizes containment. Field Team executes containment, then recovery. Consulting-grade design, muted slate palette, white background, 16:9 ratio, shapes defined by subtle shadows, generous whitespace, readable text labels, no watermarks.
 
 **Operational context CONOPS:**
-> Create a clean operational context CONOPS diagram showing a drone surveillance system. Central system: "Mission Control Platform". Surrounding actors: Drone Operators (launch/control drones), Intelligence Analysts (review feeds), Field Commanders (request missions), Partner Agencies (receive reports). External systems: Weather API (provides conditions), Satellite Comms (relays data), Archive Database (stores imagery). Labeled arrows showing interactions. Flat modern design, white background, 16:9 ratio, blue center, gray externals, readable text labels, no watermarks.
+> Create a clean operational context CONOPS diagram showing a drone surveillance system. Central system: "Mission Control Platform". Surrounding actors: Drone Operators (launch/control drones), Intelligence Analysts (review feeds), Field Commanders (request missions), Partner Agencies (receive reports). External systems: Weather API (provides conditions), Satellite Comms (relays data), Archive Database (stores imagery). Labeled arrows showing interactions. Consulting-grade design, muted professional palette, white background, 16:9 ratio, shapes defined by subtle shadows, generous whitespace, readable text labels, no watermarks.
 
 ---
 
@@ -452,9 +460,32 @@ When the reference image or user request calls for icons (server icons, database
 
 **In the JSON spec (Step 4):** Add `icon` elements positioned near their associated shapes. Icons are optional — if you're unsure which icon to use or the description doesn't clearly call for one, skip it. Shapes and labels alone produce clear diagrams.
 
-### Color Extraction Tips
+### Color Strategy for Consulting Quality
 
-- Match the reference image's color palette — pick 2-3 primary fill colors
-- Use darker variants of fill colors for borders (e.g., fill `4A90E2`, border `2C5F8A`)
-- White text (`FFFFFF`) on dark fills, dark text (`1E293B`) on light fills
-- Group backgrounds should be very light tints of their theme color (e.g., `EFF6FF` for blue groups)
+When translating a reference image to a JSON shape spec, select one of the four consulting palettes from `references/shape-spec.md`:
+
+1. **Choose a palette** that matches the diagram's domain:
+   - Corporate Blue — enterprise IT, general architecture
+   - Warm Professional — executive, reports, process
+   - Modern Slate — cloud, DevOps, modern tech
+   - Forest Green — healthcare, sustainability, environmental
+
+2. **Assign colors by visual role**, not by element type:
+   - **Primary fill** (palette Primary) → key components, main process shapes
+   - **Secondary fill** (palette Secondary) → supporting components, sub-processes
+   - **Accent fill** (palette Accent) → decision points, highlights, callouts
+   - **Neutral** (palette Neutral) → connectors, borders, labels
+   - **Light** (palette Light) → group backgrounds
+
+3. **Max 3 fill colors** per diagram — Primary, Secondary, and at most one Accent
+
+4. **Ban bright saturated primaries** — never use:
+   - `3B82F6` → use `2E5090` or `334155` instead
+   - `EF4444` → use `7C3A2D` instead
+   - `10B981` → use `1B5E42` instead
+   - `F59E0B` → use `C4A35A` or `D4A847` instead
+
+5. **Text contrast rules:**
+   - White text (`FFFFFF`) on Primary/Secondary/Accent fills
+   - Dark text (`1E293B`) on Light fills and white backgrounds
+   - Connector labels use Neutral color (`6B7280` or `94A3B8`)

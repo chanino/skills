@@ -49,6 +49,12 @@ This document defines the JSON schema that `build_slide.js --json` accepts for r
 | `altText` | string | — | Accessibility alt text |
 | `description` | string | — | Full description for .description.md |
 | `referenceImage` | string | — | Path to reference PNG; copied alongside output as `{name}.png` |
+| `titleFontSize` | number | `20` | Title text font size |
+| `titleFontFace` | string | `"Calibri"` | Title font family |
+| `titleCharSpacing` | number | `1.5` | Title character spacing in points |
+| `subtitleFontSize` | number | `12` | Subtitle font size |
+| `subtitleColor` | hex string | — | Subtitle text color (defaults to `titleColor`) |
+| `subtitleCharSpacing` | number | — | Subtitle character spacing in points |
 
 ---
 
@@ -100,9 +106,22 @@ Renders as a PowerPoint shape with optional centered label text.
 | `fontItalic` | boolean | `false` | Label italic styling |
 | `fontUnderline` | boolean | `false` | Label underline styling |
 | `fontFace` | string | `"Calibri"` | Font family name |
-| `fit` | string | — | Set to `"shrink"` to auto-shrink text to fit the shape |
+| `fit` | string | `"shrink"` | Text fit mode — default auto-shrinks text to fit shape |
+| `wrap` | boolean | — | Enable/disable text wrapping |
+| `rotate` | number | — | Shape rotation in degrees (-360 to 360) |
 | `rectRadius` | number | — | Corner radius for rounded rectangles (inches) |
 | `shadow` | object | — | Drop shadow (see Shadow Properties below) |
+| `charSpacing` | number | — | Character spacing in points (1-2 for elegance) |
+| `lineSpacing` | number | — | Line spacing in points |
+| `lineSpacingMultiple` | number | — | Line spacing multiplier (e.g. 1.2) |
+| `paraSpaceAfter` | number | — | Space after paragraph in points |
+| `paraSpaceBefore` | number | — | Space before paragraph in points |
+| `glow` | object | — | Text glow effect (see Text Glow Properties below) |
+| `textOutline` | object | — | Text outline/stroke (see Text Outline Properties below) |
+| `align` | string | `"center"` | Horizontal text alignment: `"left"`, `"center"`, `"right"` |
+| `valign` | string | `"middle"` | Vertical text alignment: `"top"`, `"middle"`, `"bottom"` |
+| `margin` | array | `[5,8,5,8]` | Text margin [top, right, bottom, left] in points |
+| `textRuns` | array | — | Rich text runs for mixed formatting (see Rich Text below) |
 
 ### `connector` — Lines/arrows between shapes or points
 
@@ -165,6 +184,10 @@ Connectors can reference shapes by `id` (recommended) or use absolute coordinate
 | `labelFontSize` | number | `8` | Label font size |
 | `labelColor` | hex string | `"666666"` | Label text color |
 | `fontFace` | string | `"Calibri"` | Label font family |
+| `labelItalic` | boolean | `false` | Label italic styling |
+| `labelCharSpacing` | number | — | Label character spacing in points |
+| `labelOffset` | number | `0` | Shift label along connector path in inches (positive = toward `to`) |
+| `labelW` | number | auto | Override auto-calculated label width in inches |
 
 **Anchor resolution:** When `from`/`to` reference element IDs, the build script auto-calculates edge midpoints:
 - `"right"` → `(x + w, y + h/2)`
@@ -209,9 +232,20 @@ For lane names, phase headers, annotations, and any text not inside a shape.
 | `fontItalic` | boolean | `false` | Italic styling |
 | `fontUnderline` | boolean | `false` | Underline styling |
 | `fontFace` | string | `"Calibri"` | Font family name |
-| `fit` | string | — | Set to `"shrink"` to auto-shrink text to fit |
+| `fit` | string | `"shrink"` | Text fit mode — default auto-shrinks text to fit |
+| `wrap` | boolean | — | Enable/disable text wrapping |
+| `rotate` | number | — | Element rotation in degrees (-360 to 360) |
 | `align` | string | `"left"` | Horizontal alignment: `"left"`, `"center"`, `"right"` |
 | `valign` | string | `"middle"` | Vertical alignment: `"top"`, `"middle"`, `"bottom"` |
+| `charSpacing` | number | — | Character spacing in points |
+| `lineSpacing` | number | — | Line spacing in points |
+| `lineSpacingMultiple` | number | — | Line spacing multiplier |
+| `paraSpaceAfter` | number | — | Space after paragraph in points |
+| `paraSpaceBefore` | number | — | Space before paragraph in points |
+| `margin` | array | — | Text margin [top, right, bottom, left] in points |
+| `glow` | object | — | Text glow effect (see Text Glow Properties) |
+| `textOutline` | object | — | Text outline/stroke (see Text Outline Properties) |
+| `textRuns` | array | — | Rich text runs for mixed formatting (see Rich Text below) |
 
 ### `divider` — Separator lines
 
@@ -273,6 +307,11 @@ Background rectangles that visually group other elements. Always place these fir
 | `labelPosition` | string | `"topLeft"` | Label position: `"topLeft"`, `"topRight"`, `"bottomLeft"`, `"bottomRight"` |
 | `fontFace` | string | `"Calibri"` | Label font family |
 | `shadow` | object | — | Drop shadow (see Shadow Properties below) |
+| `borderless` | boolean | `false` | Remove border entirely (consulting pattern where shadow defines edges) |
+| `rectRadius` | number | — | Corner radius for rounded group backgrounds (inches) |
+| `labelBold` | boolean | `false` | Bold styling for group label |
+| `labelCharSpacing` | number | — | Character spacing for group label in points |
+| `labelW` | number | auto | Override auto-calculated label width in inches |
 
 ### `icon` — Rasterized react-icons images
 
@@ -328,6 +367,172 @@ Optional drop shadow for `shape` and `group` elements. Only outer shadows are su
 | `angle` | number | `45` | Shadow angle in degrees (0–360) |
 | `color` | hex string | `"000000"` | Shadow color |
 | `opacity` | number | `0.35` | Shadow opacity (0–1) |
+
+---
+
+## Text Glow Properties
+
+Optional glow effect for text in `shape` and `text` elements. Useful for improving readability on medium-toned fills.
+
+```json
+{
+  "glow": {
+    "color": "FFFFFF",
+    "size": 2,
+    "opacity": 0.35
+  }
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `color` | hex string | `"000000"` | Glow color |
+| `size` | number | `2` | Glow size in points |
+| `opacity` | number | `0.35` | Glow opacity (0–1) |
+
+**When to use:** White glow on dark fills improves text readability. Dark glow on light fills adds subtle text emphasis. Note: glow may not render in LibreOffice headless PNG export but appears in PowerPoint.
+
+---
+
+## Text Outline Properties
+
+Optional text stroke/outline for `shape` and `text` elements. Useful for white-on-dark contrast on very dark fills.
+
+```json
+{
+  "textOutline": {
+    "color": "000000",
+    "size": 0.5
+  }
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `color` | hex string | `"000000"` | Outline color |
+| `size` | number | `0.5` | Outline width in points |
+
+**When to use:** Add a thin dark outline to white text on very dark fills for maximum contrast. Note: outline may not render in LibreOffice headless PNG export but appears in PowerPoint.
+
+---
+
+## Rich Text (textRuns)
+
+Use `textRuns` to render mixed formatting within a single shape or text element — for example, a bold title line followed by a regular subtitle line.
+
+```json
+{
+  "type": "shape",
+  "shapeType": "roundedRect",
+  "x": 1.0, "y": 1.0, "w": 2.5, "h": 1.0,
+  "fill": "2E5090",
+  "fontColor": "FFFFFF",
+  "textRuns": [
+    { "text": "API Gateway", "bold": true, "fontSize": 11, "charSpacing": 1 },
+    { "text": "v2.1 — Production", "fontSize": 8, "italic": true, "breakLine": true }
+  ]
+}
+```
+
+Each run in the `textRuns` array supports:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `text` | string | `""` | The text content for this run |
+| `fontSize` | number | parent `fontSize` | Font size in points |
+| `fontFace` | string | parent `fontFace` | Font family |
+| `fontColor` | hex string | parent `fontColor` | Text color |
+| `bold` | boolean | `false` | Bold styling |
+| `italic` | boolean | `false` | Italic styling |
+| `breakLine` | boolean | `false` | Insert line break before this run |
+| `charSpacing` | number | — | Character spacing for this run |
+
+When `textRuns` is set, the `label` / `text` property is ignored.
+
+---
+
+## Component Stack Pattern
+
+The "component stack" is the standard pattern for architecture, cloud, and network diagrams. It makes each component instantly scannable — users recognize the icon before reading text.
+
+### Variant 1: Icon Above Shape (most common)
+
+Place icon centered above the shape, shape below, description text below the shape.
+
+```json
+[
+  {
+    "type": "icon", "name": "FaCode", "library": "fa",
+    "x": 5.725, "y": 1.5, "w": 0.35, "h": 0.35,
+    "color": "2E5090"
+  },
+  {
+    "type": "shape", "id": "lambda", "shapeType": "roundedRect",
+    "x": 5.0, "y": 1.9, "w": 1.8, "h": 0.6,
+    "fill": "2E5090", "fontColor": "FFFFFF",
+    "lineWidth": 0, "rectRadius": 0.1,
+    "label": "Products Lambda", "fontSize": 10, "fontBold": true,
+    "charSpacing": 1, "margin": [8, 10, 8, 10],
+    "shadow": { "blur": 4, "offset": 3, "angle": 45, "opacity": 0.35 }
+  },
+  {
+    "type": "text",
+    "x": 5.0, "y": 2.55, "w": 1.8, "h": 0.4,
+    "text": "Product Catalog\nLogic & Management",
+    "fontSize": 7, "fontItalic": true, "fontColor": "64748B", "align": "center"
+  }
+]
+```
+
+**Spacing rules:**
+- Icon center aligns with shape center: `icon.x = shape.x + (shape.w - icon.w) / 2`
+- 0.05" gap between icon bottom and shape top: `shape.y = icon.y + icon.h + 0.05`
+- 0.05" gap between shape bottom and description: `text.y = shape.y + shape.h + 0.05`
+
+### Variant 2: Icon Inside Shape (compact layouts)
+
+Place icon at left of shape, label at right using textRuns. Good when vertical space is limited.
+
+```json
+{
+  "type": "shape", "id": "db", "shapeType": "roundedRect",
+  "x": 3.0, "y": 2.0, "w": 2.2, "h": 0.7,
+  "fill": "2E5090", "fontColor": "FFFFFF",
+  "lineWidth": 0, "rectRadius": 0.1,
+  "margin": [8, 10, 8, 10],
+  "textRuns": [
+    { "text": "  DynamoDB", "bold": true, "fontSize": 10, "charSpacing": 1 },
+    { "text": "  NoSQL Database", "fontSize": 7, "italic": true, "breakLine": true }
+  ],
+  "shadow": { "blur": 4, "offset": 3, "angle": 45, "opacity": 0.35 }
+}
+```
+
+Note: For the "icon inside" variant, place a separate `icon` element overlapping the left area of the shape. The icon renders on top of the shape.
+
+### Variant 3: Shape with Description Only (no icon)
+
+When no clear icon mapping exists, still add the description text below.
+
+```json
+[
+  {
+    "type": "shape", "id": "gateway", "shapeType": "roundedRect",
+    "x": 3.0, "y": 2.0, "w": 2.0, "h": 0.6,
+    "fill": "334155", "fontColor": "FFFFFF",
+    "lineWidth": 0, "rectRadius": 0.1,
+    "label": "API Gateway", "fontSize": 10, "fontBold": true,
+    "charSpacing": 1, "margin": [8, 10, 8, 10],
+    "shadow": { "blur": 4, "offset": 3, "angle": 45, "opacity": 0.35 }
+  },
+  {
+    "type": "text",
+    "x": 3.0, "y": 2.65, "w": 2.0, "h": 0.35,
+    "text": "Managed API Endpoint\n& Traffic Management",
+    "fontSize": 7, "fontItalic": true, "fontColor": "64748B", "align": "center"
+  }
+]
+```
 
 ---
 
@@ -397,49 +602,95 @@ For `lineDash` on any element with a border or line:
 
 ## Worked Examples
 
-### Example 1: Simple Three-Tier Architecture
+### Example 1: Three-Tier Architecture with Component Stacks
 
-Three boxes connected by arrows: Frontend → API → Database. Uses element IDs with shape-anchored connectors and shadows.
+Three components with icons above, description text below, connected by labeled arrows. This is the **standard pattern for architecture diagrams** — icon + shape + description makes each component instantly recognizable.
 
 ```json
 {
   "meta": {
     "title": "Three-Tier Architecture",
-    "altText": "Three-tier architecture with frontend, API server, and database connected by arrows."
+    "altText": "Three-tier architecture with frontend, API server, and database, each with icons and descriptions.",
+    "titleCharSpacing": 1.5
   },
   "elements": [
     {
+      "type": "icon", "name": "FaDesktop", "library": "fa",
+      "x": 1.825, "y": 1.4, "w": 0.35, "h": 0.35, "color": "2E5090"
+    },
+    {
       "type": "shape", "id": "frontend", "shapeType": "roundedRect",
-      "x": 1.0, "y": 2.0, "w": 2.0, "h": 0.8,
-      "label": "React Frontend", "fill": "4A90E2", "fontColor": "FFFFFF",
-      "lineColor": "2C5F8A", "rectRadius": 0.1,
-      "shadow": { "blur": 3, "offset": 2, "angle": 45, "opacity": 0.3 }
+      "x": 1.0, "y": 1.8, "w": 2.0, "h": 0.7,
+      "fill": "2E5090", "fontColor": "FFFFFF",
+      "lineWidth": 0, "rectRadius": 0.1,
+      "charSpacing": 1, "fontBold": true, "margin": [8, 10, 8, 10],
+      "textRuns": [
+        { "text": "React Frontend", "bold": true, "fontSize": 10, "charSpacing": 1 },
+        { "text": "Client Application", "fontSize": 8, "italic": true, "breakLine": true }
+      ],
+      "shadow": { "blur": 4, "offset": 3, "angle": 45, "opacity": 0.35 }
+    },
+    {
+      "type": "text",
+      "x": 1.0, "y": 2.55, "w": 2.0, "h": 0.4,
+      "text": "Single-Page App\nReact 18 + TypeScript",
+      "fontSize": 7, "fontItalic": true, "fontColor": "64748B", "align": "center"
+    },
+
+    {
+      "type": "icon", "name": "FaServer", "library": "fa",
+      "x": 4.825, "y": 1.4, "w": 0.35, "h": 0.35, "color": "2E5090"
     },
     {
       "type": "shape", "id": "api", "shapeType": "roundedRect",
-      "x": 4.0, "y": 2.0, "w": 2.0, "h": 0.8,
-      "label": "Node.js API", "fill": "4A90E2", "fontColor": "FFFFFF",
-      "lineColor": "2C5F8A", "rectRadius": 0.1,
-      "shadow": { "blur": 3, "offset": 2, "angle": 45, "opacity": 0.3 }
+      "x": 4.0, "y": 1.8, "w": 2.0, "h": 0.7,
+      "fill": "2E5090", "fontColor": "FFFFFF",
+      "lineWidth": 0, "rectRadius": 0.1,
+      "charSpacing": 1, "fontBold": true, "margin": [8, 10, 8, 10],
+      "textRuns": [
+        { "text": "Node.js API", "bold": true, "fontSize": 10, "charSpacing": 1 },
+        { "text": "REST Service", "fontSize": 8, "italic": true, "breakLine": true }
+      ],
+      "shadow": { "blur": 4, "offset": 3, "angle": 45, "opacity": 0.35 }
+    },
+    {
+      "type": "text",
+      "x": 4.0, "y": 2.55, "w": 2.0, "h": 0.4,
+      "text": "Express REST API\nBusiness Logic Layer",
+      "fontSize": 7, "fontItalic": true, "fontColor": "64748B", "align": "center"
+    },
+
+    {
+      "type": "icon", "name": "FaDatabase", "library": "fa",
+      "x": 7.825, "y": 1.4, "w": 0.35, "h": 0.35, "color": "5B8DB8"
     },
     {
       "type": "shape", "id": "db", "shapeType": "cylinder",
       "x": 7.0, "y": 1.8, "w": 2.0, "h": 1.2,
-      "label": "PostgreSQL", "fill": "34D399", "fontColor": "FFFFFF",
-      "lineColor": "059669",
-      "shadow": { "blur": 3, "offset": 2, "angle": 45, "opacity": 0.3 }
+      "label": "PostgreSQL", "fill": "5B8DB8", "fontColor": "FFFFFF",
+      "lineWidth": 0, "fontSize": 10,
+      "shadow": { "blur": 2, "offset": 1, "angle": 45, "opacity": 0.2 }
     },
+    {
+      "type": "text",
+      "x": 7.0, "y": 3.05, "w": 2.0, "h": 0.4,
+      "text": "Relational Database\nPostgreSQL 15",
+      "fontSize": 7, "fontItalic": true, "fontColor": "64748B", "align": "center"
+    },
+
     {
       "type": "connector",
       "from": "frontend", "fromSide": "right",
       "to": "api", "toSide": "left",
-      "label": "REST", "endArrow": "triangle"
+      "label": "REST / HTTPS", "endArrow": "triangle",
+      "lineColor": "6B7280"
     },
     {
       "type": "connector",
       "from": "api", "fromSide": "right",
       "to": "db", "toSide": "left",
-      "label": "SQL", "endArrow": "triangle"
+      "label": "SQL Queries", "endArrow": "triangle",
+      "lineColor": "6B7280"
     }
   ]
 }
@@ -447,35 +698,40 @@ Three boxes connected by arrows: Frontend → API → Database. Uses element IDs
 
 ### Example 2: Swim Lane CONOPS
 
-Actors in horizontal lanes with activities across phases.
+Actors in horizontal lanes with activities across phases. **Key pattern:** Lane names are separate `text` elements positioned LEFT of the groups (not `group.label`). Phase headers are independent `text` elements ABOVE the diagram area.
 
 ```json
 {
   "meta": {
     "title": "Incident Response CONOPS",
     "subtitle": "Swim Lane Operational View",
-    "altText": "Swim lane diagram showing incident response across four actors and three phases."
+    "altText": "Swim lane diagram showing incident response across three actors and three phases.",
+    "titleCharSpacing": 1.5
   },
   "elements": [
-    { "type": "group", "x": 1.8, "y": 0.85, "w": 8.0, "h": 1.2, "fill": "EFF6FF", "lineColor": "BFDBFE", "label": "Field Team", "labelPosition": "topLeft" },
-    { "type": "group", "x": 1.8, "y": 2.15, "w": 8.0, "h": 1.2, "fill": "F0FDF4", "lineColor": "BBF7D0", "label": "SOC Analyst", "labelPosition": "topLeft" },
-    { "type": "group", "x": 1.8, "y": 3.45, "w": 8.0, "h": 1.2, "fill": "FFF7ED", "lineColor": "FED7AA", "label": "Incident Commander", "labelPosition": "topLeft" },
+    { "type": "group", "x": 1.8, "y": 1.15, "w": 8.0, "h": 1.2, "fill": "F1F5F9", "borderless": true, "shadow": { "blur": 6, "offset": 4, "opacity": 0.12 } },
+    { "type": "group", "x": 1.8, "y": 2.45, "w": 8.0, "h": 1.2, "fill": "F1F5F9", "borderless": true, "shadow": { "blur": 6, "offset": 4, "opacity": 0.12 } },
+    { "type": "group", "x": 1.8, "y": 3.75, "w": 8.0, "h": 1.2, "fill": "F1F5F9", "borderless": true, "shadow": { "blur": 6, "offset": 4, "opacity": 0.12 } },
 
-    { "type": "text", "x": 3.0, "y": 0.85, "w": 2.0, "h": 0.3, "text": "Detection", "fontSize": 9, "fontBold": true, "fontColor": "64748B", "align": "center" },
-    { "type": "text", "x": 5.5, "y": 0.85, "w": 2.0, "h": 0.3, "text": "Triage", "fontSize": 9, "fontBold": true, "fontColor": "64748B", "align": "center" },
-    { "type": "text", "x": 7.8, "y": 0.85, "w": 2.0, "h": 0.3, "text": "Containment", "fontSize": 9, "fontBold": true, "fontColor": "64748B", "align": "center" },
+    { "type": "text", "x": 0.1, "y": 1.15, "w": 1.6, "h": 1.2, "text": "Field Team", "fontSize": 10, "fontBold": true, "fontColor": "334155", "align": "right", "valign": "middle", "charSpacing": 1 },
+    { "type": "text", "x": 0.1, "y": 2.45, "w": 1.6, "h": 1.2, "text": "SOC Analyst", "fontSize": 10, "fontBold": true, "fontColor": "334155", "align": "right", "valign": "middle", "charSpacing": 1 },
+    { "type": "text", "x": 0.1, "y": 3.75, "w": 1.6, "h": 1.2, "text": "Incident Cmdr", "fontSize": 10, "fontBold": true, "fontColor": "334155", "align": "right", "valign": "middle", "charSpacing": 1 },
 
-    { "type": "divider", "x1": 4.9, "y1": 0.85, "x2": 4.9, "y2": 4.65, "lineColor": "E2E8F0", "lineDash": "dash" },
-    { "type": "divider", "x1": 7.4, "y1": 0.85, "x2": 7.4, "y2": 4.65, "lineColor": "E2E8F0", "lineDash": "dash" },
+    { "type": "text", "x": 3.0, "y": 0.85, "w": 2.0, "h": 0.3, "text": "Detection", "fontSize": 9, "fontBold": true, "fontColor": "64748B", "align": "center", "charSpacing": 1 },
+    { "type": "text", "x": 5.5, "y": 0.85, "w": 2.0, "h": 0.3, "text": "Triage", "fontSize": 9, "fontBold": true, "fontColor": "64748B", "align": "center", "charSpacing": 1 },
+    { "type": "text", "x": 7.8, "y": 0.85, "w": 2.0, "h": 0.3, "text": "Containment", "fontSize": 9, "fontBold": true, "fontColor": "64748B", "align": "center", "charSpacing": 1 },
 
-    { "type": "shape", "shapeType": "roundedRect", "x": 2.5, "y": 1.3, "w": 1.6, "h": 0.5, "label": "Detect Anomaly", "fill": "3B82F6", "fontColor": "FFFFFF", "fontSize": 8 },
-    { "type": "shape", "shapeType": "roundedRect", "x": 5.5, "y": 2.5, "w": 1.6, "h": 0.5, "label": "Analyze & Triage", "fill": "22C55E", "fontColor": "FFFFFF", "fontSize": 8 },
-    { "type": "shape", "shapeType": "diamond", "x": 7.8, "y": 3.55, "w": 1.0, "h": 0.8, "label": "Approve?", "fill": "F97316", "fontColor": "FFFFFF", "fontSize": 8 },
-    { "type": "shape", "shapeType": "roundedRect", "x": 8.2, "y": 1.3, "w": 1.4, "h": 0.5, "label": "Execute", "fill": "3B82F6", "fontColor": "FFFFFF", "fontSize": 8 },
+    { "type": "divider", "x1": 4.9, "y1": 0.85, "x2": 4.9, "y2": 4.95, "lineColor": "E2E8F0", "lineDash": "dash" },
+    { "type": "divider", "x1": 7.4, "y1": 0.85, "x2": 7.4, "y2": 4.95, "lineColor": "E2E8F0", "lineDash": "dash" },
 
-    { "type": "connector", "x1": 4.1, "y1": 1.55, "x2": 5.5, "y2": 2.75, "endArrow": "triangle", "lineColor": "94A3B8" },
-    { "type": "connector", "x1": 7.1, "y1": 2.75, "x2": 7.8, "y2": 3.95, "endArrow": "triangle", "lineColor": "94A3B8" },
-    { "type": "connector", "x1": 8.8, "y1": 3.95, "x2": 8.9, "y2": 1.8, "endArrow": "triangle", "lineColor": "94A3B8", "label": "Yes" }
+    { "type": "shape", "id": "detect", "shapeType": "roundedRect", "x": 2.5, "y": 1.5, "w": 1.8, "h": 0.5, "label": "Detect Anomaly", "fill": "334155", "fontColor": "FFFFFF", "fontSize": 9, "lineWidth": 0, "shadow": { "blur": 4, "offset": 3, "opacity": 0.35 } },
+    { "type": "shape", "id": "triage", "shapeType": "roundedRect", "x": 5.5, "y": 2.8, "w": 1.8, "h": 0.5, "label": "Analyze & Triage", "fill": "64748B", "fontColor": "FFFFFF", "fontSize": 9, "lineWidth": 0, "shadow": { "blur": 2, "offset": 1, "opacity": 0.2 } },
+    { "type": "shape", "id": "approve", "shapeType": "diamond", "x": 7.6, "y": 3.85, "w": 1.8, "h": 1.0, "label": "Approve?", "fill": "0EA5E9", "fontColor": "FFFFFF", "fontSize": 9, "lineWidth": 0, "shadow": { "blur": 4, "offset": 3, "opacity": 0.35 } },
+    { "type": "shape", "id": "execute", "shapeType": "roundedRect", "x": 8.0, "y": 1.5, "w": 1.6, "h": 0.5, "label": "Execute", "fill": "334155", "fontColor": "FFFFFF", "fontSize": 9, "lineWidth": 0, "shadow": { "blur": 4, "offset": 3, "opacity": 0.35 } },
+
+    { "type": "connector", "from": "detect", "fromSide": "right", "to": "triage", "toSide": "left", "endArrow": "triangle", "lineColor": "94A3B8", "route": "elbow" },
+    { "type": "connector", "from": "triage", "fromSide": "right", "to": "approve", "toSide": "top", "endArrow": "triangle", "lineColor": "94A3B8", "route": "elbow" },
+    { "type": "connector", "from": "approve", "fromSide": "right", "to": "execute", "toSide": "bottom", "endArrow": "triangle", "lineColor": "94A3B8", "label": "Yes", "route": "elbow" }
   ]
 }
 ```
@@ -486,40 +742,46 @@ Actors in horizontal lanes with activities across phases.
 {
   "meta": {
     "title": "User Login Flow",
-    "altText": "Flowchart showing user login with credential validation and MFA check."
+    "altText": "Flowchart showing user login with credential validation and MFA check.",
+    "titleCharSpacing": 1.5
   },
   "elements": [
     {
       "type": "shape", "shapeType": "flowTerminator",
       "x": 4.0, "y": 1.0, "w": 2.0, "h": 0.6,
-      "label": "Start", "fill": "10B981", "fontColor": "FFFFFF"
+      "label": "Start", "fill": "2E5090", "fontColor": "FFFFFF",
+      "lineWidth": 0, "shadow": { "blur": 4, "offset": 3, "opacity": 0.35 }
     },
     {
       "type": "shape", "shapeType": "roundedRect",
       "x": 4.0, "y": 2.0, "w": 2.0, "h": 0.6,
-      "label": "Enter Credentials", "fill": "3B82F6", "fontColor": "FFFFFF"
+      "label": "Enter Credentials", "fill": "5B8DB8", "fontColor": "FFFFFF",
+      "lineWidth": 0, "shadow": { "blur": 2, "offset": 1, "opacity": 0.2 }
     },
     {
       "type": "shape", "shapeType": "diamond",
       "x": 4.0, "y": 3.0, "w": 2.0, "h": 1.0,
-      "label": "Valid?", "fill": "F59E0B", "fontColor": "FFFFFF"
+      "label": "Valid?", "fill": "C4A35A", "fontColor": "FFFFFF",
+      "lineWidth": 0, "shadow": { "blur": 4, "offset": 3, "opacity": 0.35 }
     },
     {
       "type": "shape", "shapeType": "roundedRect",
       "x": 7.0, "y": 3.2, "w": 2.0, "h": 0.6,
-      "label": "Show Error", "fill": "EF4444", "fontColor": "FFFFFF"
+      "label": "Show Error", "fill": "7C3A2D", "fontColor": "FFFFFF",
+      "lineWidth": 0, "shadow": { "blur": 2, "offset": 1, "opacity": 0.2 }
     },
     {
       "type": "shape", "shapeType": "flowTerminator",
       "x": 4.0, "y": 4.5, "w": 2.0, "h": 0.6,
-      "label": "Dashboard", "fill": "10B981", "fontColor": "FFFFFF"
+      "label": "Dashboard", "fill": "2E5090", "fontColor": "FFFFFF",
+      "lineWidth": 0, "shadow": { "blur": 4, "offset": 3, "opacity": 0.35 }
     },
-    { "type": "connector", "x1": 5.0, "y1": 1.6, "x2": 5.0, "y2": 2.0, "endArrow": "triangle" },
-    { "type": "connector", "x1": 5.0, "y1": 2.6, "x2": 5.0, "y2": 3.0, "endArrow": "triangle" },
-    { "type": "connector", "x1": 6.0, "y1": 3.5, "x2": 7.0, "y2": 3.5, "endArrow": "triangle", "label": "No", "labelColor": "EF4444" },
-    { "type": "connector", "x1": 5.0, "y1": 4.0, "x2": 5.0, "y2": 4.5, "endArrow": "triangle", "label": "Yes", "labelColor": "10B981" },
-    { "type": "connector", "x1": 8.0, "y1": 3.2, "x2": 8.0, "y2": 2.3, "endArrow": "triangle", "lineDash": "dash" },
-    { "type": "connector", "x1": 8.0, "y1": 2.3, "x2": 6.0, "y2": 2.3, "endArrow": "triangle", "lineDash": "dash", "label": "Retry" }
+    { "type": "connector", "x1": 5.0, "y1": 1.6, "x2": 5.0, "y2": 2.0, "endArrow": "triangle", "lineColor": "6B7280" },
+    { "type": "connector", "x1": 5.0, "y1": 2.6, "x2": 5.0, "y2": 3.0, "endArrow": "triangle", "lineColor": "6B7280" },
+    { "type": "connector", "x1": 6.0, "y1": 3.5, "x2": 7.0, "y2": 3.5, "endArrow": "triangle", "label": "No", "labelColor": "7C3A2D", "lineColor": "6B7280" },
+    { "type": "connector", "x1": 5.0, "y1": 4.0, "x2": 5.0, "y2": 4.5, "endArrow": "triangle", "label": "Yes", "labelColor": "2E5090", "lineColor": "6B7280" },
+    { "type": "connector", "x1": 8.0, "y1": 3.2, "x2": 8.0, "y2": 2.3, "endArrow": "triangle", "lineDash": "dash", "lineColor": "6B7280" },
+    { "type": "connector", "x1": 8.0, "y1": 2.3, "x2": 6.0, "y2": 2.3, "endArrow": "triangle", "lineDash": "dash", "label": "Retry", "lineColor": "6B7280" }
   ]
 }
 ```
@@ -541,22 +803,101 @@ Actors in horizontal lanes with activities across phases.
 - For vertical flows: keep x-coordinates consistent, vary y
 - Center the diagram in the usable area (x: 0.5–9.5, y: 0.85–5.35)
 
-### Color Palettes
+### Consulting-Quality Color Palettes
 
-**Blue/gray (professional, default):**
-- Primary: `4A90E2` (shapes), `2C5F8A` (borders)
-- Secondary: `34D399` (databases/success), `059669` (borders)
-- Text on dark: `FFFFFF`, Text on light: `1E293B`
-- Groups: `F0F4F8` fill, `CBD5E1` border
+Use one of these curated palettes per diagram. Each palette provides role-based colors for consistent visual hierarchy. **Rule:** max 3 fill colors per diagram, never use saturated primaries (`3B82F6`, `EF4444`, `10B981`, `F59E0B`), connectors use the Neutral color.
 
-**Warm (decisions, warnings):**
-- Process: `3B82F6`, Decision: `F59E0B`, Error: `EF4444`, Success: `10B981`
+**Corporate Blue** — Default for technical/enterprise diagrams:
 
-**CONOPS (operational):**
-- Human activities: `3B82F6` (blue)
-- Automated steps: `22C55E` (green)
-- Decision points: `F97316` (orange)
-- Lane backgrounds: `EFF6FF`, `F0FDF4`, `FFF7ED`, `FDF2F8`
+| Role | Hex | Use |
+|------|-----|-----|
+| Primary | `2E5090` | Main shapes, key components |
+| Secondary | `5B8DB8` | Supporting shapes |
+| Accent | `C4A35A` | Highlights, decision points |
+| Neutral | `6B7280` | Connectors, borders, labels |
+| Light | `F1F5F9` | Group backgrounds |
+
+**Warm Professional** — Reports, executive presentations:
+
+| Role | Hex | Use |
+|------|-----|-----|
+| Primary | `7C3A2D` | Main shapes |
+| Secondary | `C4734F` | Supporting shapes |
+| Accent | `D4A847` | Highlights, callouts |
+| Neutral | `6B7280` | Connectors, borders, labels |
+| Light | `FDF6F0` | Group backgrounds |
+
+**Modern Slate** — Cloud, DevOps, modern tech:
+
+| Role | Hex | Use |
+|------|-----|-----|
+| Primary | `334155` | Main shapes |
+| Secondary | `64748B` | Supporting shapes |
+| Accent | `0EA5E9` | Highlights, action items |
+| Neutral | `94A3B8` | Connectors, borders, labels |
+| Light | `F1F5F9` | Group backgrounds |
+
+**Forest Green** — Environmental, healthcare, sustainability:
+
+| Role | Hex | Use |
+|------|-----|-----|
+| Primary | `1B5E42` | Main shapes |
+| Secondary | `3D8B6E` | Supporting shapes |
+| Accent | `D4A847` | Highlights, decisions |
+| Neutral | `6B7280` | Connectors, borders, labels |
+| Light | `F0F9F4` | Group backgrounds |
+
+**Color rules:**
+- White text (`FFFFFF`) on Primary/Secondary fills
+- Dark text (`1E293B`) on Light fills
+- Connector/border colors use the Neutral value from your chosen palette
+- Group backgrounds use the Light value
+- Darker variant of fill for borders: e.g., Primary `2E5090` → border `1E3A6A`
+
+### Visual Weight Hierarchy
+
+Use a 3-tier visual weight system to create depth and emphasis:
+
+| Tier | Role | Fill | Border | Shadow | Font | charSpacing |
+|------|------|------|--------|--------|------|-------------|
+| **Tier 1** (primary) | Key components | Primary color, dark | Borderless | `{ "blur": 4, "offset": 3, "opacity": 0.35 }` | Bold, 10-11pt, white | `1` |
+| **Tier 2** (secondary) | Supporting elements | Secondary color, medium | Thin (1pt) | `{ "blur": 2, "offset": 1, "opacity": 0.2 }` | Regular, 9-10pt | — |
+| **Tier 3** (background) | Context, groups | Light fill | Subtle or borderless | `{ "blur": 6, "offset": 4, "opacity": 0.12 }` | 8-9pt, italic | — |
+
+### Typography Hierarchy
+
+| Element | fontSize | fontBold | charSpacing | fontColor |
+|---------|----------|----------|-------------|-----------|
+| Slide title | 20 | true | 1.5 | `1E293B` |
+| Slide subtitle | 12 | false | — | `64748B` |
+| Primary shape labels | 10-11 | true | 1 | `FFFFFF` |
+| Secondary shape labels | 9-10 | false | — | `FFFFFF` |
+| Group labels | 9 | true | 1 | `64748B` |
+| Connector labels | 8 | false | — | `6B7280` |
+| Standalone text | 9-11 | varies | — | `1E293B` |
+
+### Spacing Standards
+
+| Measurement | Minimum | Recommended |
+|-------------|---------|-------------|
+| Gap between shapes | 0.3" | 0.4"–0.6" |
+| Padding inside groups | 0.15" | 0.2"–0.3" |
+| Shape text margin | `[5,8,5,8]` | `[8,10,8,10]` |
+| Shape heights | 0.5" | 0.6"–0.8" |
+| Shape widths | 1.5" | 1.8"–2.5" |
+| Architecture shape widths | 1.8" | 2.0"–2.5" |
+| Icon-to-shape gap | 0.05" | 0.05" |
+| Shape-to-description gap | 0.05" | 0.05"–0.1" |
+| Connector label clearance | 0.1" | 0.15" |
+
+### Minimum Size Rules
+
+| Element | Minimum | Recommended |
+|---------|---------|-------------|
+| Shape with label | w: 1.5" | w: max(1.8", chars×0.13") |
+| Shape with textRuns | 2.0" × 0.8" | 2.2" × 0.9" |
+| Diamond | 1.8" × 1.0" | 2.0" × 1.2" |
+| Cylinder | h: 1.0" | h: 1.2" |
 
 ### Connector Math Reference
 
@@ -592,3 +933,5 @@ Right-to-left arrow: `x1 > x2` (flip handled automatically)
 ```json
 { "x1": 7.0, "y1": 2.0, "x2": 4.0, "y2": 2.0 }
 ```
+
+**Curved connectors:** pptxgenjs only supports straight lines and elbow (orthogonal L-path) routing — no Bezier curves. If a reference image shows smooth curved arrows, use `"route": "elbow"` as the closest approximation.
