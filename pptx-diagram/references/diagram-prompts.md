@@ -410,6 +410,16 @@ The structural description from Step 3 gives you positions (left/center/right, t
 - **0.1"–0.2" padding** inside group backgrounds (from group border to contained shapes)
 - **0.3"–0.5" vertical gap** between rows of shapes
 
+### Icons in Diagrams
+
+When the reference image or user request calls for icons (server icons, database icons, user icons, cloud logos, etc.), you can include them in the JSON spec as `"type": "icon"` elements. See `references/icon-catalog.md` for available icon names.
+
+**In the image generation prompt:** You can request icons on shapes (e.g., "show a server icon on each compute node") to guide the reference layout. The image generator may or may not produce distinct icons, but they serve as placement hints.
+
+**In the structural description (Step 3):** Call out any icons or iconographic elements: "a server icon appears above the 'API Server' label", "a database cylinder icon sits to the left of 'PostgreSQL'". This helps map them to `icon` elements in Step 4.
+
+**In the JSON spec (Step 4):** Add `icon` elements positioned near their associated shapes. Icons are optional — if you're unsure which icon to use or the description doesn't clearly call for one, skip it. Shapes and labels alone produce clear diagrams.
+
 ### Color Extraction Tips
 
 - Match the reference image's color palette — pick 2-3 primary fill colors

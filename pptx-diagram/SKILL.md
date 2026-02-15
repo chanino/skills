@@ -12,7 +12,7 @@ user_invocable: true
 
 # PPTX Diagram Skill
 
-You are creating a technical diagram as a polished single-slide PPTX with **native editable shapes**. The output contains real PowerPoint shapes (rectangles, diamonds, arrows, text boxes) that the user can click, move, resize, and edit directly in PowerPoint. Follow these 5 steps in order.
+You are creating a technical diagram as a polished single-slide PPTX with **native editable shapes**. The output contains real PowerPoint shapes (rectangles, diamonds, arrows, text boxes) that the user can click, move, resize, and edit directly in PowerPoint. Optionally, diagrams can include **rasterized icons** (server, database, cloud, etc.) for visual reinforcement. Follow these 6 steps in order.
 
 ## Step 1: Craft the Image Generation Prompt
 
@@ -51,7 +51,7 @@ Use `image_to_text.py` (Gemini vision) to extract a detailed structural descript
 **Call 1 — Structural layout description** (the key piece):
 
 ```bash
-python3 scripts/image_to_text.py -i /tmp/diagram.png "Describe the structural layout of this technical diagram in precise detail. For every shape: state its type (rectangle, rounded rectangle, diamond, oval, cylinder, cloud), approximate position (left/center/right, top/middle/bottom), approximate size relative to the slide, fill color, border color, and the exact text label inside it. For every arrow or connector: state its start element, end element, direction, line style (solid, dashed), arrowhead style, and any label text. For any background grouping boxes: state their position, size, fill color, border color, and label. For any divider lines: state orientation, position, and style. For standalone text labels: state their content, position, and styling. Describe the overall layout grid (how many columns/rows, spacing pattern)."
+python3 scripts/image_to_text.py -i /tmp/diagram.png "Describe the structural layout of this technical diagram in precise detail. For every shape: state its type (rectangle, rounded rectangle, diamond, oval, cylinder, cloud), approximate position (left/center/right, top/middle/bottom), approximate size relative to the slide, fill color, border color, and the exact text label inside it. For every arrow or connector: state its start element, end element, direction, line style (solid, dashed), arrowhead style, and any label text. For any background grouping boxes: state their position, size, fill color, border color, and label. For any divider lines: state orientation, position, and style. For standalone text labels: state their content, position, and styling. For any icons: describe their type (person, server, database, cloud, shield, lock, etc.) and position relative to nearby shapes. Describe the overall layout grid (how many columns/rows, spacing pattern)."
 ```
 
 Save the output to `/tmp/diagram-layout.txt`.
@@ -98,6 +98,7 @@ This is the core step. You will translate the **structural text description** fr
 - Use `connector` for arrows between shapes (absolute coordinates)
 - Use `text` for standalone labels (lane names, phase headers, annotations)
 - Use `divider` for separator lines
+- Use `icon` for visual icons (server, database, cloud, user, etc.) — see `references/icon-catalog.md` for names. Icons are optional — skip if the description doesn't clearly call for them or if unsure which icon to use
 - Map described elements to appropriate shape types using the structural description
 - Use consistent spacing: 0.2" gaps between shapes, 0.1" padding inside groups
 
@@ -130,6 +131,39 @@ node scripts/build_slide.js \
   --alt-text "ALT TEXT" \
   --output output.pptx
 ```
+
+## Step 6: QA and Iteration
+
+After building the PPTX, verify the output visually and fix any issues.
+
+### 6a. Convert PPTX to PNG
+
+```bash
+soffice --headless --convert-to png --outdir /tmp output.pptx
+```
+
+### 6b. Inspect the rendered PNG
+
+View the converted PNG and run through the QA checklist (`references/qa-checklist.md`):
+
+1. **Overlap** — shapes, labels, or icons overlapping
+2. **Text overflow** — labels cut off or running outside shapes
+3. **Out of bounds** — elements outside the visible slide area (0–10" x 0.85–5.35")
+4. **Spacing** — inconsistent gaps between shapes in the same row/column
+5. **Icons** — missing, invisible, or wrong size
+6. **Connectors** — arrows not connecting to shape edges, labels overlapping shapes
+7. **Color contrast** — text unreadable against its background
+8. **Reference match** — rendered layout structurally matches the reference image from Step 2
+
+### 6c. Fix and rebuild
+
+If issues are found: fix the JSON spec → rebuild the PPTX → re-convert to PNG → re-inspect.
+
+**Maximum 2 fix cycles.** Most issues are spacing or alignment problems that are quick to fix by adjusting coordinates.
+
+### 6d. Report remaining issues
+
+If any issues remain after 2 fix cycles, report them to the user as known limitations (e.g., "The connector label between X and Y slightly overlaps — you may want to nudge it in PowerPoint").
 
 ## Output
 

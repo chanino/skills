@@ -210,6 +210,35 @@ Background rectangles that visually group other elements. Always place these fir
 | `labelColor` | hex string | `"64748B"` | Label text color |
 | `labelPosition` | string | `"topLeft"` | Label position: `"topLeft"`, `"topRight"`, `"bottomLeft"`, `"bottomRight"` |
 
+### `icon` — Rasterized react-icons images
+
+Renders a react-icons icon as a rasterized PNG embedded in the slide. Requires `react`, `react-dom`, `react-icons`, and `sharp` to be installed globally. If dependencies are missing, icon elements are skipped gracefully.
+
+```json
+{
+  "type": "icon",
+  "name": "FaServer",
+  "library": "fa",
+  "x": 2.5, "y": 1.5, "w": 0.4, "h": 0.4,
+  "color": "4A90E2"
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | string | — | **Required.** react-icons export name (e.g. `FaServer`, `SiAmazonaws`) |
+| `library` | string | `"fa"` | Icon pack: `fa` (Font Awesome), `md` (Material Design), `hi` (Heroicons), `bs` (Bootstrap), `si` (Simple Icons), `tb` (Tabler) |
+| `x`, `y` | number | — | **Required.** Top-left position in inches |
+| `w`, `h` | number | — | **Required.** Display size in inches |
+| `color` | hex string | `"333333"` | Icon fill color (no `#` prefix) |
+
+See `references/icon-catalog.md` for a curated list of icons organized by category.
+
+**Placement tips:**
+- Place icons slightly above or to the left of their associated shape label
+- Typical icon size: 0.3"–0.5" for inline icons, 0.5"–0.8" for standalone icons
+- Icons render as images, not native shapes — they cannot be recolored in PowerPoint
+
 ---
 
 ## Shape Type Catalog

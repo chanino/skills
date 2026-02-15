@@ -16,6 +16,91 @@ try {
   pptxgen = require(path.join(globalDir, "pptxgenjs"));
 }
 
+// --- Icon rendering dependencies (optional) ---
+let iconDepsAvailable = null; // null = not checked, true/false = result
+let React, ReactDOMServer, sharp;
+
+function resolveFromGlobal(moduleName) {
+  const globalDir = path.join(
+    require("os").homedir(),
+    ".npm-global",
+    "lib",
+    "node_modules"
+  );
+  return require(path.join(globalDir, moduleName));
+}
+
+function loadIconDeps() {
+  if (iconDepsAvailable !== null) return iconDepsAvailable;
+  try {
+    try { React = require("react"); } catch { React = resolveFromGlobal("react"); }
+    try { ReactDOMServer = require("react-dom/server"); } catch { ReactDOMServer = resolveFromGlobal("react-dom/server"); }
+    try { sharp = require("sharp"); } catch { sharp = resolveFromGlobal("sharp"); }
+    iconDepsAvailable = true;
+  } catch (err) {
+    console.warn(`Icon dependencies not available (${err.message}). Icon elements will be skipped.`);
+    console.warn("Install with: npm install -g react react-dom react-icons sharp");
+    iconDepsAvailable = false;
+  }
+  return iconDepsAvailable;
+}
+
+function resolveIconComponent(name, library) {
+  const lib = library || "fa";
+  const modulePath = `react-icons/${lib}`;
+  let mod;
+  try { mod = require(modulePath); } catch { mod = resolveFromGlobal(`react-icons/${lib}`); }
+  const Component = mod[name];
+  if (!Component) {
+    throw new Error(`Icon "${name}" not found in react-icons/${lib}`);
+  }
+  return Component;
+}
+
+async function renderIcon(slide, el) {
+  if (!loadIconDeps()) {
+    console.warn(`Skipping icon element "${el.name}" — icon dependencies not installed.`);
+    return;
+  }
+
+  const color = (el.color || "333333").replace(/^#/, "");
+
+  let Component;
+  try {
+    Component = resolveIconComponent(el.name, el.library);
+  } catch (err) {
+    console.warn(`Skipping icon "${el.name}": ${err.message}`);
+    return;
+  }
+
+  // Render to SVG string
+  const svgBody = ReactDOMServer.renderToStaticMarkup(
+    React.createElement(Component, { color: `#${color}`, size: 256 })
+  );
+
+  // Wrap in proper SVG document if not already
+  let svgString = svgBody;
+  if (!svgBody.startsWith("<?xml") && !svgBody.startsWith("<svg")) {
+    svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256">${svgBody}</svg>`;
+  }
+
+  // Rasterize to PNG via sharp
+  const pngBuffer = await sharp(Buffer.from(svgString))
+    .resize(256, 256)
+    .png()
+    .toBuffer();
+
+  const base64 = `image/png;base64,${pngBuffer.toString("base64")}`;
+
+  slide.addImage({
+    data: base64,
+    x: el.x,
+    y: el.y,
+    w: el.w,
+    h: el.h,
+  });
+}
+
 // --- Shape type mapping ---
 function getShapeMap(pres) {
   return {
@@ -226,7 +311,7 @@ function renderGroup(slide, pres, el) {
 }
 
 // --- Build slide from JSON spec ---
-function buildSlideFromJson(spec) {
+async function buildSlideFromJson(spec) {
   const pres = new pptxgen();
   pres.layout = "LAYOUT_16x9"; // 10" x 5.625"
   pres.title = spec.meta.title;
@@ -296,6 +381,9 @@ function buildSlideFromJson(spec) {
         break;
       case "divider":
         renderDivider(slide, pres, el);
+        break;
+      case "icon":
+        await renderIcon(slide, el);
         break;
       default:
         console.warn(`Unknown element type: ${el.type}, skipping`);
@@ -563,7 +651,7 @@ async function main() {
     const noArtifacts = process.argv.includes("--no-artifacts");
 
     const spec = parseJsonSpec(jsonPath);
-    const pres = buildSlideFromJson(spec);
+    const pres = await buildSlideFromJson(spec);
 
     const resolved = path.resolve(outputPath);
     await pres.writeFile({ fileName: resolved });
