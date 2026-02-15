@@ -95,12 +95,16 @@ This is the core step. You will translate the **structural text description** fr
 **Key principles:**
 - Place `group` elements first in the array (they render behind other shapes)
 - Use `shape` for all boxes, ovals, diamonds, cylinders, etc.
-- Use `connector` for arrows between shapes (absolute coordinates)
+- **Assign `id` to every shape that will have connectors.** Use `from`/`to` connector anchoring with `fromSide`/`toSide` instead of manual coordinate calculation — this is the single most effective way to eliminate visual errors
+- Use `connector` for arrows between shapes. Prefer shape-anchored mode (`from`/`to`) over absolute coordinates (`x1,y1,x2,y2`)
+- Use `"route": "elbow"` for connectors that need orthogonal L-shaped paths
+- **Add `shadow` to primary shapes for visual depth.** Use consistent shadow settings: `{ "blur": 3, "offset": 2, "angle": 45, "opacity": 0.3 }`
 - Use `text` for standalone labels (lane names, phase headers, annotations)
 - Use `divider` for separator lines
 - Use `icon` for visual icons (server, database, cloud, user, etc.) — see `references/icon-catalog.md` for names. Icons are optional — skip if the description doesn't clearly call for them or if unsure which icon to use
 - Map described elements to appropriate shape types using the structural description
 - Use consistent spacing: 0.2" gaps between shapes, 0.1" padding inside groups
+- Use `fontFace` for font control (default: "Calibri"), `fontItalic`/`fontUnderline` for styling, `fit: "shrink"` to prevent text overflow
 
 ## Step 5: Build the PPTX
 
@@ -154,6 +158,9 @@ View the converted PNG and run through the QA checklist (`references/qa-checklis
 6. **Connectors** — arrows not connecting to shape edges, labels overlapping shapes
 7. **Color contrast** — text unreadable against its background
 8. **Reference match** — rendered layout structurally matches the reference image from Step 2
+9. **Shadow consistency** — if shadows are used, are they applied uniformly?
+10. **Connector anchoring** — do connectors visually connect to shape edges?
+11. **Font consistency** — is the same fontFace used throughout?
 
 ### 6c. Fix and rebuild
 

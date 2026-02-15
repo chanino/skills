@@ -118,6 +118,23 @@ function getShapeMap(pres) {
     flowTerminator: pres.shapes.FLOWCHART_TERMINATOR,
     flowDocument: pres.shapes.FLOWCHART_DOCUMENT,
     flowData: pres.shapes.FLOWCHART_DATA,
+    trapezoid: pres.shapes.TRAPEZOID,
+    pentagon: pres.shapes.PENTAGON,
+    octagon: pres.shapes.OCTAGON,
+    cube: pres.shapes.CUBE,
+    gear6: pres.shapes.GEAR_6,
+    gear9: pres.shapes.GEAR_9,
+    star5: pres.shapes.STAR_5_POINTS,
+    rightArrow: pres.shapes.RIGHT_ARROW,
+    leftArrow: pres.shapes.LEFT_ARROW,
+    upArrow: pres.shapes.UP_ARROW,
+    downArrow: pres.shapes.DOWN_ARROW,
+    leftRightArrow: pres.shapes.LEFT_RIGHT_ARROW,
+    flowAlternateProcess: pres.shapes.FLOWCHART_ALTERNATE_PROCESS,
+    flowPredefinedProcess: pres.shapes.FLOWCHART_PREDEFINED_PROCESS,
+    flowManualInput: pres.shapes.FLOWCHART_MANUAL_INPUT,
+    flowPreparation: pres.shapes.FLOWCHART_PREPARATION,
+    flowMultidocument: pres.shapes.FLOWCHART_MULTIDOCUMENT,
   };
 }
 
@@ -142,6 +159,46 @@ function parseJsonSpec(filePath) {
   return spec;
 }
 
+// --- Shadow helper ---
+function buildShadow(shadowSpec) {
+  if (!shadowSpec) return undefined;
+  return {
+    type: "outer", // only outer — inner shadows cause pptxgenjs file corruption
+    blur: shadowSpec.blur != null ? shadowSpec.blur : 3,
+    offset: shadowSpec.offset != null ? shadowSpec.offset : 3,
+    angle: shadowSpec.angle != null ? shadowSpec.angle : 45,
+    color: (shadowSpec.color || "000000").replace(/^#/, ""),
+    opacity: shadowSpec.opacity != null ? shadowSpec.opacity : 0.35,
+  };
+}
+
+// --- Connector anchor resolution ---
+function resolveConnectorEndpoints(el, elementPositions) {
+  // If from/to are set, resolve to absolute coordinates from element positions
+  if (el.from && el.to && elementPositions[el.from] && elementPositions[el.to]) {
+    const fromPos = elementPositions[el.from];
+    const toPos = elementPositions[el.to];
+    const fromSide = el.fromSide || "right";
+    const toSide = el.toSide || "left";
+
+    const sidePoint = (pos, side) => {
+      switch (side) {
+        case "right":  return { x: pos.x + pos.w, y: pos.y + pos.h / 2 };
+        case "left":   return { x: pos.x, y: pos.y + pos.h / 2 };
+        case "top":    return { x: pos.x + pos.w / 2, y: pos.y };
+        case "bottom": return { x: pos.x + pos.w / 2, y: pos.y + pos.h };
+        default:       return { x: pos.x + pos.w, y: pos.y + pos.h / 2 };
+      }
+    };
+
+    const fp = sidePoint(fromPos, fromSide);
+    const tp = sidePoint(toPos, toSide);
+    return { x1: fp.x, y1: fp.y, x2: tp.x, y2: tp.y };
+  }
+  // Fallback: use existing absolute coordinates
+  return { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 };
+}
+
 // --- Element renderers ---
 function renderShape(slide, pres, shapeMap, el) {
   const shapeType = shapeMap[el.shapeType] || pres.shapes.ROUNDED_RECTANGLE;
@@ -163,83 +220,155 @@ function renderShape(slide, pres, shapeMap, el) {
   };
   if (el.rectRadius) opts.rectRadius = el.rectRadius;
 
+  const shadow = buildShadow(el.shadow);
+  if (shadow) opts.shadow = shadow;
+
   if (el.label) {
-    slide.addText(el.label, {
+    const textOpts = {
       ...opts,
       shape: shapeType,
       fontSize: el.fontSize || 10,
-      fontFace: "Calibri",
+      fontFace: el.fontFace || "Calibri",
       color: fontColor,
       bold: el.fontBold || false,
+      italic: el.fontItalic || false,
+      underline: el.fontUnderline || false,
       align: "center",
       valign: "middle",
       margin: [3, 5, 3, 5],
-    });
+    };
+    if (el.fit === "shrink") textOpts.fit = "shrink";
+    slide.addText(el.label, textOpts);
   } else {
     slide.addShape(shapeType, opts);
   }
 }
 
-function renderConnector(slide, pres, el) {
-  const dx = el.x2 - el.x1;
-  const dy = el.y2 - el.y1;
-  const x = Math.min(el.x1, el.x2);
-  const y = Math.min(el.y1, el.y2);
-  const w = Math.abs(dx) || 0.001;
-  const h = Math.abs(dy) || 0.001;
-  const flipH = dx < 0;
-  const flipV = dy < 0;
+function renderConnector(slide, pres, el, elementPositions) {
+  const coords = resolveConnectorEndpoints(el, elementPositions);
+  const { x1, y1, x2, y2 } = coords;
 
   const lineColor = (el.lineColor || "333333").replace(/^#/, "");
+  const lineOpts = {
+    color: lineColor,
+    width: el.lineWidth || 1.5,
+    dashType: el.lineDash || "solid",
+  };
 
-  slide.addShape(pres.shapes.LINE, {
-    x,
-    y,
-    w,
-    h,
-    flipH,
-    flipV,
-    line: {
-      color: lineColor,
-      width: el.lineWidth || 1.5,
-      dashType: el.lineDash || "solid",
-      beginArrowType: el.startArrow || "none",
-      endArrowType: el.endArrow || "triangle",
-    },
-  });
+  if (el.route === "elbow") {
+    // Elbow routing: 3-segment orthogonal path
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    let segments;
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      // Horizontal-first: H → V → H
+      const midX = x1 + dx / 2;
+      segments = [
+        { x1, y1, x2: midX, y2: y1 },
+        { x1: midX, y1, x2: midX, y2: y2 },
+        { x1: midX, y1: y2, x2, y2 },
+      ];
+    } else {
+      // Vertical-first: V → H → V
+      const midY = y1 + dy / 2;
+      segments = [
+        { x1, y1, x2: x1, y2: midY },
+        { x1, y1: midY, x2, y2: midY },
+        { x1: x2, y1: midY, x2, y2 },
+      ];
+    }
 
-  if (el.label) {
-    const mx = (el.x1 + el.x2) / 2;
-    const my = (el.y1 + el.y2) / 2;
-    const labelColor = (el.labelColor || "666666").replace(/^#/, "");
-    slide.addText(el.label, {
-      x: mx - 0.5,
-      y: my - 0.2,
-      w: 1.0,
-      h: 0.25,
-      fontSize: el.labelFontSize || 8,
-      color: labelColor,
-      align: "center",
-      valign: "middle",
-      fontFace: "Calibri",
+    segments.forEach((seg, i) => {
+      const sdx = seg.x2 - seg.x1;
+      const sdy = seg.y2 - seg.y1;
+      const sx = Math.min(seg.x1, seg.x2);
+      const sy = Math.min(seg.y1, seg.y2);
+      const sw = Math.abs(sdx) || 0.001;
+      const sh = Math.abs(sdy) || 0.001;
+      const segLine = { ...lineOpts };
+      // First segment: start arrow; last segment: end arrow; middle: none
+      segLine.beginArrowType = i === 0 ? (el.startArrow || "none") : "none";
+      segLine.endArrowType = i === segments.length - 1 ? (el.endArrow || "triangle") : "none";
+
+      slide.addShape(pres.shapes.LINE, {
+        x: sx, y: sy, w: sw, h: sh,
+        flipH: sdx < 0, flipV: sdy < 0,
+        line: segLine,
+      });
     });
+
+    // Label at bend point
+    if (el.label) {
+      let lx, ly;
+      if (Math.abs(dx) >= Math.abs(dy)) {
+        lx = x1 + dx / 2;
+        ly = y1;
+      } else {
+        lx = x1;
+        ly = y1 + dy / 2;
+      }
+      const labelColor = (el.labelColor || "666666").replace(/^#/, "");
+      slide.addText(el.label, {
+        x: lx - 0.5, y: ly - 0.2, w: 1.0, h: 0.25,
+        fontSize: el.labelFontSize || 8,
+        color: labelColor,
+        align: "center", valign: "middle",
+        fontFace: el.fontFace || "Calibri",
+      });
+    }
+  } else {
+    // Straight connector (default)
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const x = Math.min(x1, x2);
+    const y = Math.min(y1, y2);
+    const w = Math.abs(dx) || 0.001;
+    const h = Math.abs(dy) || 0.001;
+    const flipH = dx < 0;
+    const flipV = dy < 0;
+
+    slide.addShape(pres.shapes.LINE, {
+      x, y, w, h, flipH, flipV,
+      line: {
+        ...lineOpts,
+        beginArrowType: el.startArrow || "none",
+        endArrowType: el.endArrow || "triangle",
+      },
+    });
+
+    if (el.label) {
+      const mx = (x1 + x2) / 2;
+      const my = (y1 + y2) / 2;
+      const labelColor = (el.labelColor || "666666").replace(/^#/, "");
+      slide.addText(el.label, {
+        x: mx - 0.5, y: my - 0.2, w: 1.0, h: 0.25,
+        fontSize: el.labelFontSize || 8,
+        color: labelColor,
+        align: "center", valign: "middle",
+        fontFace: el.fontFace || "Calibri",
+      });
+    }
   }
 }
 
 function renderText(slide, el) {
   const fontColor = (el.fontColor || "1E293B").replace(/^#/, "");
-  slide.addText(el.text || "", {
+  const opts = {
     x: el.x,
     y: el.y,
     w: el.w,
     h: el.h,
     fontSize: el.fontSize || 11,
-    fontFace: "Calibri",
+    fontFace: el.fontFace || "Calibri",
     color: fontColor,
     bold: el.fontBold || false,
+    italic: el.fontItalic || false,
+    underline: el.fontUnderline || false,
     align: el.align || "left",
     valign: el.valign || "middle",
-  });
+  };
+  if (el.fit === "shrink") opts.fit = "shrink";
+  slide.addText(el.text || "", opts);
 }
 
 function renderDivider(slide, pres, el) {
@@ -273,7 +402,7 @@ function renderGroup(slide, pres, el) {
   const fill = (el.fill || "F0F4F8").replace(/^#/, "");
   const lineColor = (el.lineColor || "CBD5E1").replace(/^#/, "");
 
-  slide.addShape(pres.shapes.RECTANGLE, {
+  const opts = {
     x: el.x,
     y: el.y,
     w: el.w,
@@ -284,7 +413,12 @@ function renderGroup(slide, pres, el) {
       width: el.lineWidth || 1,
       dashType: el.lineDash || "solid",
     },
-  });
+  };
+
+  const shadow = buildShadow(el.shadow);
+  if (shadow) opts.shadow = shadow;
+
+  slide.addShape(pres.shapes.RECTANGLE, opts);
 
   if (el.label) {
     const labelColor = (el.labelColor || "64748B").replace(/^#/, "");
@@ -301,7 +435,7 @@ function renderGroup(slide, pres, el) {
       w: 1.5,
       h: 0.25,
       fontSize: el.labelFontSize || 9,
-      fontFace: "Calibri",
+      fontFace: el.fontFace || "Calibri",
       color: labelColor,
       bold: false,
       align,
@@ -364,17 +498,30 @@ async function buildSlideFromJson(spec) {
     margin: 0,
   });
 
-  // Render elements in order (z-order: first = behind)
+  // Two-pass render:
+  //   Pass 1: Render all non-connector elements, collect positions by id
+  //   Pass 2: Render connectors (resolving from/to anchors against collected positions)
+
+  const elementPositions = {};
+  const connectorElements = [];
+
   for (const el of spec.elements) {
+    if (el.type === "connector") {
+      connectorElements.push(el);
+      continue;
+    }
+
+    // Collect position for elements with an id
+    if (el.id && el.x != null && el.y != null && el.w != null && el.h != null) {
+      elementPositions[el.id] = { x: el.x, y: el.y, w: el.w, h: el.h };
+    }
+
     switch (el.type) {
       case "group":
         renderGroup(slide, pres, el);
         break;
       case "shape":
         renderShape(slide, pres, shapeMap, el);
-        break;
-      case "connector":
-        renderConnector(slide, pres, el);
         break;
       case "text":
         renderText(slide, el);
@@ -388,6 +535,11 @@ async function buildSlideFromJson(spec) {
       default:
         console.warn(`Unknown element type: ${el.type}, skipping`);
     }
+  }
+
+  // Pass 2: Render connectors with resolved endpoints
+  for (const el of connectorElements) {
+    renderConnector(slide, pres, el, elementPositions);
   }
 
   // Footer

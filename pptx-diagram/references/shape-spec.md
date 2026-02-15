@@ -61,6 +61,7 @@ Renders as a PowerPoint shape with optional centered label text.
 ```json
 {
   "type": "shape",
+  "id": "api",
   "shapeType": "roundedRect",
   "x": 2.5, "y": 1.2, "w": 1.8, "h": 0.6,
   "label": "API Gateway",
@@ -72,12 +73,18 @@ Renders as a PowerPoint shape with optional centered label text.
   "fontSize": 10,
   "fontColor": "FFFFFF",
   "fontBold": false,
-  "rectRadius": 0.1
+  "fontItalic": false,
+  "fontUnderline": false,
+  "fontFace": "Calibri",
+  "fit": "shrink",
+  "rectRadius": 0.1,
+  "shadow": { "blur": 3, "offset": 3, "angle": 45, "color": "000000", "opacity": 0.35 }
 }
 ```
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `id` | string | — | Optional unique identifier for connector anchoring |
 | `shapeType` | string | `"roundedRect"` | Shape type (see Shape Type Catalog below) |
 | `x`, `y` | number | — | **Required.** Top-left position in inches |
 | `w`, `h` | number | — | **Required.** Width and height in inches |
@@ -90,11 +97,32 @@ Renders as a PowerPoint shape with optional centered label text.
 | `fontSize` | number | `10` | Label font size in points |
 | `fontColor` | hex string | `"333333"` | Label text color |
 | `fontBold` | boolean | `false` | Label bold styling |
+| `fontItalic` | boolean | `false` | Label italic styling |
+| `fontUnderline` | boolean | `false` | Label underline styling |
+| `fontFace` | string | `"Calibri"` | Font family name |
+| `fit` | string | — | Set to `"shrink"` to auto-shrink text to fit the shape |
 | `rectRadius` | number | — | Corner radius for rounded rectangles (inches) |
+| `shadow` | object | — | Drop shadow (see Shadow Properties below) |
 
-### `connector` — Lines/arrows between points
+### `connector` — Lines/arrows between shapes or points
 
-Renders as a line from (x1,y1) to (x2,y2) with optional arrowheads and a label.
+Connectors can reference shapes by `id` (recommended) or use absolute coordinates as a fallback.
+
+**Shape-anchored connector** (preferred — endpoints auto-calculated from shape edges):
+
+```json
+{
+  "type": "connector",
+  "from": "api", "fromSide": "right",
+  "to": "db", "toSide": "left",
+  "lineColor": "333333",
+  "lineWidth": 1.5,
+  "endArrow": "triangle",
+  "label": "SQL Queries"
+}
+```
+
+**Absolute coordinate connector** (legacy — still fully supported):
 
 ```json
 {
@@ -102,29 +130,51 @@ Renders as a line from (x1,y1) to (x2,y2) with optional arrowheads and a label.
   "x1": 4.3, "y1": 1.5, "x2": 5.5, "y2": 1.5,
   "lineColor": "333333",
   "lineWidth": 1.5,
-  "lineDash": "solid",
-  "startArrow": "none",
   "endArrow": "triangle",
-  "label": "REST API",
-  "labelFontSize": 8,
-  "labelColor": "666666"
+  "label": "REST API"
+}
+```
+
+**Elbow (orthogonal) connector** — renders as a 3-segment L-shaped path:
+
+```json
+{
+  "type": "connector",
+  "from": "api", "fromSide": "bottom",
+  "to": "cache", "toSide": "top",
+  "route": "elbow",
+  "endArrow": "triangle"
 }
 ```
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `x1`, `y1` | number | — | **Required.** Start point in inches |
-| `x2`, `y2` | number | — | **Required.** End point in inches |
+| `from` | string | — | Source element `id` for shape-anchored mode |
+| `fromSide` | string | `"right"` | Which edge of the source shape: `"left"`, `"right"`, `"top"`, `"bottom"` |
+| `to` | string | — | Target element `id` for shape-anchored mode |
+| `toSide` | string | `"left"` | Which edge of the target shape: `"left"`, `"right"`, `"top"`, `"bottom"` |
+| `x1`, `y1` | number | — | Start point in inches (used when `from` is not set) |
+| `x2`, `y2` | number | — | End point in inches (used when `to` is not set) |
+| `route` | string | `"straight"` | Routing mode: `"straight"` (direct line) or `"elbow"` (orthogonal L-path) |
 | `lineColor` | hex string | `"333333"` | Line color |
 | `lineWidth` | number | `1.5` | Line width in points |
 | `lineDash` | string | `"solid"` | Line dash style |
 | `startArrow` | string | `"none"` | Arrow at start point (see Arrow Types) |
 | `endArrow` | string | `"triangle"` | Arrow at end point |
-| `label` | string | — | Text label at the midpoint of the line |
+| `label` | string | — | Text label at the midpoint (straight) or bend point (elbow) |
 | `labelFontSize` | number | `8` | Label font size |
 | `labelColor` | hex string | `"666666"` | Label text color |
+| `fontFace` | string | `"Calibri"` | Label font family |
 
-**Connector math:** The line is computed as `addShape(LINE, { x: min(x1,x2), y: min(y1,y2), w: |x2-x1|, h: |y2-y1|, flipH: dx<0, flipV: dy<0 })`. The label is a separate text box at the midpoint.
+**Anchor resolution:** When `from`/`to` reference element IDs, the build script auto-calculates edge midpoints:
+- `"right"` → `(x + w, y + h/2)`
+- `"left"` → `(x, y + h/2)`
+- `"top"` → `(x + w/2, y)`
+- `"bottom"` → `(x + w/2, y + h)`
+
+**Elbow routing:** Renders 3 LINE segments. Horizontal-first if `|dx| ≥ |dy|`, vertical-first otherwise. The label is placed at the bend point.
+
+**Fallback:** If `from`/`to` are not set or reference unknown IDs, the connector falls back to `x1,y1,x2,y2` absolute coordinates (full backward compatibility).
 
 ### `text` — Standalone text labels
 
@@ -133,11 +183,15 @@ For lane names, phase headers, annotations, and any text not inside a shape.
 ```json
 {
   "type": "text",
+  "id": "header1",
   "x": 0.2, "y": 0.8, "w": 1.5, "h": 0.5,
   "text": "SOC Analyst",
   "fontSize": 11,
   "fontColor": "1E293B",
   "fontBold": true,
+  "fontItalic": false,
+  "fontUnderline": false,
+  "fontFace": "Calibri",
   "align": "left",
   "valign": "middle"
 }
@@ -145,12 +199,17 @@ For lane names, phase headers, annotations, and any text not inside a shape.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `id` | string | — | Optional unique identifier |
 | `x`, `y` | number | — | **Required.** Top-left position in inches |
 | `w`, `h` | number | — | **Required.** Width and height in inches |
 | `text` | string | `""` | The text content |
 | `fontSize` | number | `11` | Font size in points |
 | `fontColor` | hex string | `"1E293B"` | Text color |
 | `fontBold` | boolean | `false` | Bold styling |
+| `fontItalic` | boolean | `false` | Italic styling |
+| `fontUnderline` | boolean | `false` | Underline styling |
+| `fontFace` | string | `"Calibri"` | Font family name |
+| `fit` | string | — | Set to `"shrink"` to auto-shrink text to fit |
 | `align` | string | `"left"` | Horizontal alignment: `"left"`, `"center"`, `"right"` |
 | `valign` | string | `"middle"` | Vertical alignment: `"top"`, `"middle"`, `"bottom"` |
 
@@ -183,6 +242,7 @@ Background rectangles that visually group other elements. Always place these fir
 ```json
 {
   "type": "group",
+  "id": "vpc",
   "x": 1.5, "y": 0.8, "w": 8.0, "h": 1.5,
   "fill": "F0F4F8",
   "fillTransparency": 0,
@@ -192,12 +252,14 @@ Background rectangles that visually group other elements. Always place these fir
   "label": "Cloud VPC",
   "labelFontSize": 9,
   "labelColor": "64748B",
-  "labelPosition": "topLeft"
+  "labelPosition": "topLeft",
+  "shadow": { "blur": 3, "offset": 3, "angle": 45, "color": "000000", "opacity": 0.35 }
 }
 ```
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `id` | string | — | Optional unique identifier |
 | `x`, `y` | number | — | **Required.** Top-left position |
 | `w`, `h` | number | — | **Required.** Width and height |
 | `fill` | hex string | `"F0F4F8"` | Background fill color |
@@ -209,6 +271,8 @@ Background rectangles that visually group other elements. Always place these fir
 | `labelFontSize` | number | `9` | Label font size |
 | `labelColor` | hex string | `"64748B"` | Label text color |
 | `labelPosition` | string | `"topLeft"` | Label position: `"topLeft"`, `"topRight"`, `"bottomLeft"`, `"bottomRight"` |
+| `fontFace` | string | `"Calibri"` | Label font family |
+| `shadow` | object | — | Drop shadow (see Shadow Properties below) |
 
 ### `icon` — Rasterized react-icons images
 
@@ -241,6 +305,32 @@ See `references/icon-catalog.md` for a curated list of icons organized by catego
 
 ---
 
+## Shadow Properties
+
+Optional drop shadow for `shape` and `group` elements. Only outer shadows are supported (inner shadows cause pptxgenjs file corruption).
+
+```json
+{
+  "shadow": {
+    "blur": 3,
+    "offset": 3,
+    "angle": 45,
+    "color": "000000",
+    "opacity": 0.35
+  }
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `blur` | number | `3` | Shadow blur radius in points |
+| `offset` | number | `3` | Shadow offset distance in points |
+| `angle` | number | `45` | Shadow angle in degrees (0–360) |
+| `color` | hex string | `"000000"` | Shadow color |
+| `opacity` | number | `0.35` | Shadow opacity (0–1) |
+
+---
+
 ## Shape Type Catalog
 
 | `shapeType` value | PowerPoint shape | Use for |
@@ -254,11 +344,28 @@ See `references/icon-catalog.md` for a curated list of icons organized by catego
 | `triangle` | Isosceles Triangle | Warnings, hierarchy roots |
 | `hexagon` | Hexagon | Process nodes, hub elements |
 | `parallelogram` | Parallelogram | Data/IO elements |
+| `trapezoid` | Trapezoid | Funnel stages, transformation steps |
+| `pentagon` | Pentagon | Milestone markers, process phases |
+| `octagon` | Octagon | Stop/alert indicators |
+| `cube` | Cube | 3D storage, infrastructure blocks |
+| `gear6` | 6-tooth Gear | Settings, configuration |
+| `gear9` | 9-tooth Gear | Complex processing, engines |
+| `star5` | 5-pointed Star | Highlights, ratings, key items |
+| `rightArrow` | Right Arrow | Direction indicators, next steps |
+| `leftArrow` | Left Arrow | Back/return indicators |
+| `upArrow` | Up Arrow | Upload, improvement |
+| `downArrow` | Down Arrow | Download, degradation |
+| `leftRightArrow` | Left-Right Arrow | Bidirectional flow |
 | `flowProcess` | Flowchart Process | Flowchart process steps |
 | `flowDecision` | Flowchart Decision | Flowchart decision nodes |
 | `flowTerminator` | Flowchart Terminator | Flowchart start/end |
 | `flowDocument` | Flowchart Document | Document shapes |
 | `flowData` | Flowchart Data | Data step shapes |
+| `flowAlternateProcess` | Flowchart Alternate Process | Alternative process steps |
+| `flowPredefinedProcess` | Flowchart Predefined Process | Subroutine/predefined process |
+| `flowManualInput` | Flowchart Manual Input | Manual data entry steps |
+| `flowPreparation` | Flowchart Preparation | Setup/initialization steps |
+| `flowMultidocument` | Flowchart Multidocument | Multiple document outputs |
 
 ## Arrow Types
 
@@ -292,7 +399,7 @@ For `lineDash` on any element with a border or line:
 
 ### Example 1: Simple Three-Tier Architecture
 
-Three boxes connected by arrows: Frontend → API → Database.
+Three boxes connected by arrows: Frontend → API → Database. Uses element IDs with shape-anchored connectors and shadows.
 
 ```json
 {
@@ -302,31 +409,36 @@ Three boxes connected by arrows: Frontend → API → Database.
   },
   "elements": [
     {
-      "type": "shape", "shapeType": "roundedRect",
+      "type": "shape", "id": "frontend", "shapeType": "roundedRect",
       "x": 1.0, "y": 2.0, "w": 2.0, "h": 0.8,
       "label": "React Frontend", "fill": "4A90E2", "fontColor": "FFFFFF",
-      "lineColor": "2C5F8A", "rectRadius": 0.1
+      "lineColor": "2C5F8A", "rectRadius": 0.1,
+      "shadow": { "blur": 3, "offset": 2, "angle": 45, "opacity": 0.3 }
     },
     {
-      "type": "shape", "shapeType": "roundedRect",
+      "type": "shape", "id": "api", "shapeType": "roundedRect",
       "x": 4.0, "y": 2.0, "w": 2.0, "h": 0.8,
       "label": "Node.js API", "fill": "4A90E2", "fontColor": "FFFFFF",
-      "lineColor": "2C5F8A", "rectRadius": 0.1
+      "lineColor": "2C5F8A", "rectRadius": 0.1,
+      "shadow": { "blur": 3, "offset": 2, "angle": 45, "opacity": 0.3 }
     },
     {
-      "type": "shape", "shapeType": "cylinder",
+      "type": "shape", "id": "db", "shapeType": "cylinder",
       "x": 7.0, "y": 1.8, "w": 2.0, "h": 1.2,
       "label": "PostgreSQL", "fill": "34D399", "fontColor": "FFFFFF",
-      "lineColor": "059669"
+      "lineColor": "059669",
+      "shadow": { "blur": 3, "offset": 2, "angle": 45, "opacity": 0.3 }
     },
     {
       "type": "connector",
-      "x1": 3.0, "y1": 2.4, "x2": 4.0, "y2": 2.4,
+      "from": "frontend", "fromSide": "right",
+      "to": "api", "toSide": "left",
       "label": "REST", "endArrow": "triangle"
     },
     {
       "type": "connector",
-      "x1": 6.0, "y1": 2.4, "x2": 7.0, "y2": 2.4,
+      "from": "api", "fromSide": "right",
+      "to": "db", "toSide": "left",
       "label": "SQL", "endArrow": "triangle"
     }
   ]
@@ -448,22 +560,35 @@ Actors in horizontal lanes with activities across phases.
 
 ### Connector Math Reference
 
-**Horizontal arrow** (left to right): `x1 < x2`, same `y1 = y2`
+**Preferred: Shape-anchored connectors** — assign `id` to shapes, then use `from`/`to`:
+```json
+{ "from": "shapeA", "fromSide": "right", "to": "shapeB", "toSide": "left" }
+```
+The build script auto-calculates edge midpoints. No manual coordinate math needed.
+
+**Elbow routing** — add `"route": "elbow"` for orthogonal L-shaped paths:
+```json
+{ "from": "shapeA", "fromSide": "bottom", "to": "shapeB", "toSide": "top", "route": "elbow" }
+```
+
+**Fallback: Absolute coordinates** (still supported for backward compatibility):
+
+Horizontal arrow (left to right): `x1 < x2`, same `y1 = y2`
 ```json
 { "x1": 3.0, "y1": 2.0, "x2": 5.0, "y2": 2.0 }
 ```
 
-**Vertical arrow** (top to bottom): same `x1 = x2`, `y1 < y2`
+Vertical arrow (top to bottom): same `x1 = x2`, `y1 < y2`
 ```json
 { "x1": 5.0, "y1": 1.5, "x2": 5.0, "y2": 3.0 }
 ```
 
-**Diagonal arrow** (any direction): different x and y values
+Diagonal arrow (any direction): different x and y values
 ```json
 { "x1": 2.0, "y1": 1.0, "x2": 5.0, "y2": 3.0 }
 ```
 
-**Right-to-left arrow**: `x1 > x2` (flip handled automatically)
+Right-to-left arrow: `x1 > x2` (flip handled automatically)
 ```json
 { "x1": 7.0, "y1": 2.0, "x2": 4.0, "y2": 2.0 }
 ```

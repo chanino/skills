@@ -105,6 +105,28 @@ x[i] = X + gap + i * (shapeWidth + gap)
 - All connections/arrows are accounted for
 - Grouping boxes contain the correct elements
 
+## 9. Shadow Consistency
+
+**What to look for:** Shadows applied to some shapes but not others in the same visual tier. Inconsistent shadow parameters (different blur, offset, or angle across similar shapes).
+
+**Typical fix:** If shadows are used, apply the same shadow settings to all primary shapes uniformly. Group backgrounds may have a different (usually lighter) shadow. Use consistent values: `{ "blur": 3, "offset": 2, "angle": 45, "opacity": 0.3 }` is a safe default.
+
+## 10. Connector Anchoring
+
+**What to look for:** Connectors that don't visually touch their source/target shape edges. Gaps between arrow endpoints and shapes.
+
+**Typical fix:** Use shape-anchored connectors (`from`/`to` with `fromSide`/`toSide`) instead of absolute coordinates. If using absolute coordinates, recalculate endpoints from shape edges:
+- Right edge: `x1 = shape.x + shape.w`, `y1 = shape.y + shape.h/2`
+- Left edge: `x2 = shape.x`, `y2 = shape.y + shape.h/2`
+- Bottom edge: `x1 = shape.x + shape.w/2`, `y1 = shape.y + shape.h`
+- Top edge: `x2 = shape.x + shape.w/2`, `y2 = shape.y`
+
+## 11. Font Consistency
+
+**What to look for:** Mixed font families across shapes and labels. Different fontFace values used without intentional design reason.
+
+**Typical fix:** Use the same `fontFace` throughout the diagram. Default is `"Calibri"`. Only vary font if deliberately using a different face for labels vs. shape text.
+
 ---
 
 ## Quick Reference
@@ -119,3 +141,6 @@ x[i] = X + gap + i * (shapeWidth + gap)
 | Connectors | Arrows start/end at shape edges, labels clear of shapes |
 | Contrast | All text readable against its background |
 | Reference match | Layout structurally matches reference image |
+| Shadow consistency | Shadows applied uniformly across similar shapes |
+| Connector anchoring | Connectors visually connect to shape edges |
+| Font consistency | Same fontFace used throughout unless intentionally varied |

@@ -399,9 +399,41 @@ After generating the reference image (Step 2) and extracting a structural descri
 The structural description from Step 3 gives you positions (left/center/right, top/middle/bottom), relative sizes, and layout grid info. Map these to inch coordinates:
 
 1. **Slide is 10" wide × 5.625" tall** — the title bar uses the top 0.75", so your diagram area is roughly 0.85" to 5.35" vertically
-2. **Map described positions to a grid**: for a 3-column layout, shapes at x ≈ 1.0, 4.0, 7.0; for 4 columns: x ≈ 0.5, 2.8, 5.2, 7.5. Use the description's spatial terms ("left third", "center", "right side") to assign columns
+2. **Map described positions to a grid**: use the grid templates below for common layouts
 3. **Standard shape sizes**: boxes are typically 1.5"–2.5" wide × 0.5"–0.8" tall; cylinders are 1.5"–2.0" wide × 1.0"–1.2" tall
-4. **Connectors**: start at the right edge of one shape (x + w) and end at the left edge of the next (x); for vertical arrows, use the bottom (y + h) and top (y) of shapes. Use the description's start/end element names to identify which shapes to connect
+4. **Connectors**: always assign `id` fields to shapes that have connectors. Use `from`/`to` with side anchors instead of calculating x1,y1,x2,y2 manually. The build script auto-calculates edge midpoints at render time.
+
+#### Grid Templates for Common Layouts
+
+**3-column horizontal flow** (e.g., Frontend → API → Database):
+```
+Shape width: 2.0"  |  x positions: 1.0, 4.0, 7.0  |  y: 2.5 (centered)
+```
+
+**4-column horizontal flow**:
+```
+Shape width: 1.8"  |  x positions: 0.5, 2.8, 5.1, 7.4  |  y: 2.5
+```
+
+**2-row × 3-column grid** (e.g., layered architecture):
+```
+Shape width: 2.0"  |  x positions: 1.0, 4.0, 7.0
+Row 1 y: 1.5  |  Row 2 y: 3.5
+```
+
+**Vertical flow** (e.g., top-to-bottom flowchart):
+```
+Shape width: 2.0", height: 0.6"  |  x: 4.0 (centered)
+y positions: 1.0, 2.0, 3.0, 4.0 (0.4" gap between shapes)
+```
+
+#### Connector Best Practices
+
+- **Always use shape-anchored connectors** (`from`/`to` with `fromSide`/`toSide`) instead of manually calculating absolute coordinates. This eliminates the #1 source of visual errors: arrows that don't touch shapes.
+- For horizontal flows: `fromSide: "right"`, `toSide: "left"`
+- For vertical flows: `fromSide: "bottom"`, `toSide: "top"`
+- Use `"route": "elbow"` for connectors that need to go around shapes (L-shaped paths)
+- For diagonal connections or non-adjacent shapes, elbow routing produces cleaner results than straight lines
 
 ### Spacing Conventions
 
