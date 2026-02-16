@@ -1,3 +1,6 @@
+# Canonical version maintained in gemini-image skill.
+# This is a local copy for pptx-diagram self-containment.
+
 import mimetypes
 import os
 import argparse
