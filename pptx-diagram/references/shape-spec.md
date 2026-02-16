@@ -790,18 +790,32 @@ Actors in horizontal lanes with activities across phases. **Key pattern:** Lane 
 
 ## Layout Tips
 
-### Spacing Conventions
-- **Gap between shapes:** 0.2" minimum, 0.5"–1.0" typical for readability
-- **Padding inside groups:** 0.1"–0.2" from the group border to contained shapes
-- **Shape heights:** 0.5"–0.8" for process boxes, 0.8"–1.2" for cylinders/diamonds
-- **Shape widths:** 1.5"–2.5" for labeled boxes
-- **Connector label clearance:** Labels at midpoint should not overlap shapes
+### Spacing Scale
+
+Use a consistent modular scale for all spacing decisions:
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `xs`  | 0.1"  | Icon-to-shape gap, tight internal padding |
+| `sm`  | 0.2"  | Minimum inter-shape gap, group internal padding |
+| `md`  | 0.4"  | Standard inter-shape gap (preferred) |
+| `lg`  | 0.6"  | Column separation, major section breaks |
+| `xl`  | 0.8"  | Canvas margins, swim lane gutter width |
+
+**Rule:** Every gap, padding, and margin should map to a scale token. Ad-hoc values like 0.35" or 0.55" break visual rhythm.
 
 ### Alignment Guidance
 - Align shape centers horizontally or vertically for clean rows/columns
 - For horizontal flows: keep y-coordinates consistent, vary x
 - For vertical flows: keep x-coordinates consistent, vary y
 - Center the diagram in the usable area (x: 0.5–9.5, y: 0.85–5.35)
+
+### Composition & Focal Point
+
+- **Identify the primary flow** (the main left→right or top→bottom path) and align it on the horizontal or vertical center of the diagram area. Secondary paths branch off from it.
+- **Entry point prominence:** The first shape in the flow (user, client, trigger) should be the largest or most visually distinct element — readers scan left-to-right, top-to-bottom.
+- **Gestalt proximity:** Shapes that work together should be closer to each other than to unrelated shapes. Use `md` (0.4") gaps within a functional group and `lg` (0.6") between groups.
+- **Whitespace is structural:** Empty space between groups communicates boundaries as effectively as borders. Don't fill every available inch.
 
 ### Consulting-Quality Color Palettes
 
@@ -863,6 +877,12 @@ Use a 3-tier visual weight system to create depth and emphasis:
 | **Tier 1** (primary) | Key components | Primary color, dark | Borderless | `{ "blur": 4, "offset": 3, "opacity": 0.35 }` | Bold, 10-11pt, white | `1` |
 | **Tier 2** (secondary) | Supporting elements | Secondary color, medium | Thin (1pt) | `{ "blur": 2, "offset": 1, "opacity": 0.2 }` | Regular, 9-10pt | — |
 | **Tier 3** (background) | Context, groups | Light fill | Subtle or borderless | `{ "blur": 6, "offset": 4, "opacity": 0.12 }` | 8-9pt, italic | — |
+
+### Depth & Visual Weight Rules
+
+1. **Never combine a visible border AND a shadow on the same shape.** Borders say "flat, contained." Shadows say "elevated, floating." Mixing both creates visual tension. Exception: Tier 2 shapes may use a 1pt border as an accent alongside a very light shadow (opacity ≤ 0.2).
+2. **Shadows imply elevation order.** Higher blur+offset = further from the canvas. Groups (background) get the lightest shadow; primary shapes get the strongest.
+3. **Data-ink ratio:** Every visual element (border, shadow, gradient, icon) must earn its place. If removing an element doesn't reduce clarity, remove it. Decorative borders on Tier 1 shapes add no information — omit them.
 
 ### Typography Hierarchy
 
@@ -935,3 +955,13 @@ Right-to-left arrow: `x1 > x2` (flip handled automatically)
 ```
 
 **Curved connectors:** pptxgenjs only supports straight lines and elbow (orthogonal L-path) routing — no Bezier curves. If a reference image shows smooth curved arrows, use `"route": "elbow"` as the closest approximation.
+
+### Connector Semantics
+
+| Style | Meaning | Properties |
+|-------|---------|------------|
+| Solid, 1.5pt | Primary data flow, synchronous call | `lineWidth: 1.5` |
+| Dashed | Async, event-driven, or secondary flow | `lineDash: "dash"` |
+| Dotted | Optional, monitoring, or out-of-band | `lineDash: "sysDot"` |
+
+Always label connectors with the interaction verb (e.g., "Invoke", "Query", "Emit"). Unlabeled arrows force the reader to guess semantics.

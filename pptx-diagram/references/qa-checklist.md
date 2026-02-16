@@ -243,6 +243,30 @@ Pick one consulting palette from shape-spec.md (Corporate Blue, Warm Professiona
 { "type": "connector", "from": "a", "to": "b", "label": "Long Label Text", "labelOffset": -0.3, "labelW": 1.5 }
 ```
 
+## 18. Grayscale Hierarchy Test
+
+**What to look for:** Convert the rendered PNG to grayscale (mentally or via tool). Can you still distinguish Tier 1, Tier 2, and Tier 3 elements? If all shapes look the same in grayscale, the hierarchy relies too heavily on color.
+
+**Typical fix:** Ensure Tier 1 shapes have darker fills than Tier 2, and both are darker than Tier 3 backgrounds. The 3-tier shadow system should create sufficient depth even without color.
+
+## 19. Contrast & Accessibility
+
+**What to look for:** Text-on-fill combinations that may fail WCAG contrast thresholds. Common failures: medium gray text on light gray backgrounds, or light text on medium fills.
+
+**Typical fix:** White text (`FFFFFF`) requires a fill of `5B8DB8` or darker. Dark text (`1E293B`) requires a fill of `E2E8F0` or lighter. Connector labels (`6B7280`) need a white or very light background. When in doubt, increase contrast — readability trumps subtlety.
+
+## 20. Data-Ink Ratio
+
+**What to look for:** Decorative elements that don't convey information — borders on borderless Tier 1 shapes, gradients that don't encode data, shadows on elements that don't need elevation distinction.
+
+**Typical fix:** Apply the "removal test" — if you can remove a visual property without losing meaning, remove it. Borders on Tier 1 shapes (which already have dark fills + strong shadows) are redundant. Shadows on flat text labels add no information.
+
+## 21. Spacing Scale Compliance
+
+**What to look for:** Ad-hoc spacing values that don't match the modular scale (xs=0.1", sm=0.2", md=0.4", lg=0.6", xl=0.8"). Gaps of 0.35", 0.55", or 0.75" break visual rhythm.
+
+**Typical fix:** Round all gaps to the nearest scale token. If a 0.35" gap exists, choose either sm (0.2") or md (0.4") — whichever fits the layout better.
+
 ---
 
 ## Quick Reference
@@ -266,3 +290,7 @@ Pick one consulting palette from shape-spec.md (Corporate Blue, Warm Professiona
 | 15 | Text-to-shape fit | Shapes wide enough for labels, textRuns ≥ 2.0"×0.8", diamonds ≥ 1.8"×1.0" |
 | 16 | Swim lane labels | Lane names are separate text elements outside groups, not group.label |
 | 17 | Connector label overlap | Labels don't overlap shapes; use labelOffset to shift if needed |
+| 18 | Grayscale hierarchy | Tier 1/2/3 distinguishable without color |
+| 19 | Contrast | White text on fills ≥ `5B8DB8` darkness; dark text on fills ≤ `E2E8F0` |
+| 20 | Data-ink ratio | No redundant borders, shadows, or decorations |
+| 21 | Spacing scale | All gaps match xs/sm/md/lg/xl tokens (0.1/0.2/0.4/0.6/0.8") |

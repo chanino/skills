@@ -102,6 +102,9 @@ This is the core step. You will translate the **structural text description** fr
 - **Apply visual weight hierarchy** — use the 3-tier shadow/border system from shape-spec.md: Tier 1 (primary: dark fill, borderless, strong shadow), Tier 2 (secondary: medium fill, thin border, light shadow), Tier 3 (backgrounds: light fill, soft shadow)
 - **Typography polish** — add `charSpacing: 1` on primary shape labels, `charSpacing: 1.5` on title via `meta.titleCharSpacing`, use `margin: [8,10,8,10]` for breathing room inside shapes
 - **Generous spacing** — minimum 0.4" gap between adjacent shapes, 0.2" padding inside groups
+- **Data-ink ratio** — every visual element (border, shadow, decoration) must convey information. Apply the removal test: if removing it doesn't reduce clarity, remove it. Don't add borders to Tier 1 shapes that already have dark fills + strong shadows
+- **Spacing scale** — use the modular scale from shape-spec.md: xs(0.1"), sm(0.2"), md(0.4"), lg(0.6"), xl(0.8"). Every gap should map to a token. Ad-hoc values break visual rhythm
+- **Composition** — align the primary flow on the diagram's center axis. Make the entry-point shape the most visually prominent. Use proximity to group related shapes (md gaps within groups, lg gaps between groups)
 - Use `textRuns` for primary shapes that need title + subtitle formatting (e.g., service name + version or role)
 - Use `text` for standalone labels (lane names, phase headers, annotations)
 - Use `divider` for separator lines
@@ -206,6 +209,10 @@ View the converted PNG and run through the QA checklist (`references/qa-checklis
 15. **Text-to-shape fit** — shapes wide enough for labels, textRuns shapes ≥ 2.0" × 0.8", diamonds ≥ 1.8" × 1.0"?
 16. **Swim lane label placement** — lane names are separate `text` elements outside groups, not `group.label`? Phase headers are independent `text` elements?
 17. **Connector label overlap** — labels don't overlap shapes? Use `labelOffset` to shift if needed?
+18. **Grayscale hierarchy** — Tier 1/2/3 elements distinguishable without color
+19. **Contrast** — text-on-fill combinations meet WCAG thresholds
+20. **Data-ink ratio** — no redundant borders, shadows, or decorations
+21. **Spacing scale** — all gaps match xs/sm/md/lg/xl tokens (0.1/0.2/0.4/0.6/0.8")
 
 ### 6c. Fix and rebuild
 
