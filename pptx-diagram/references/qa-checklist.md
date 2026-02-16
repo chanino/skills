@@ -67,9 +67,9 @@ x[i] = X + gap + i * (shapeWidth + gap)
 **For architecture/cloud/network diagrams:** Verify that major components (3+ shapes) have associated icons. If the reference image shows icons, the spec must include them. Missing icons are the #1 cause of the PPTX looking "flat" compared to reference images.
 
 **Typical fix:**
-- Missing: verify `name` matches a valid react-icons export (check `icon-catalog.md`)
-- Invisible: change `color` to contrast with the background (dark icon on light bg, or vice versa)
-- Too small/large: adjust `w` and `h` (typical: 0.3"–0.5")
+- Missing: verify `path` points to an existing PNG in `assets/icons/` (check `icon-catalog.md`). For deprecated `name`/`library` usage, verify the export name is valid
+- Invisible: ensure icon PNG has sufficient contrast with the slide background
+- Too small/large: adjust `w` and `h` (typical: 0.3"--0.5")
 
 ## 6. Connectors
 
@@ -277,7 +277,7 @@ Pick one consulting palette from shape-spec.md (Corporate Blue, Warm Professiona
 | 2 | Text overflow | All labels fully visible within shapes |
 | 3 | Bounds | All elements within 0–10" horizontal, 0.85–5.35" vertical |
 | 4 | Spacing | Consistent gaps within rows/columns (±0.1" tolerance) |
-| 5 | Icons | All icon elements visible and correctly sized; architecture diagrams have icons on major components |
+| 5 | Icons | All icon `path` values point to existing PNGs; icons visible and correctly sized; architecture diagrams have icons on major components |
 | 6 | Connectors | Arrows start/end at shape edges, labels clear of shapes |
 | 7 | Contrast | All text readable against its background |
 | 8 | Reference match | Layout structurally matches reference image |

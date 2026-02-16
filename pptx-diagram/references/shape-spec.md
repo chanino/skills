@@ -181,7 +181,8 @@ Connectors can reference shapes by `id` (recommended) or use absolute coordinate
 | `startArrow` | string | `"none"` | Arrow at start point (see Arrow Types) |
 | `endArrow` | string | `"triangle"` | Arrow at end point |
 | `label` | string | — | Text label at the midpoint (straight) or bend point (elbow) |
-| `labelFontSize` | number | `9` | Label font size |
+| `labelFontSize` | number | `10` | Label font size |
+| `labelBgColor` | hex string | `meta.bgColor` | Background fill behind label text (knockout over connector line) |
 | `labelColor` | hex string | `"666666"` | Label text color |
 | `fontFace` | string | `"Calibri"` | Label font family |
 | `labelItalic` | boolean | `false` | Label italic styling |
@@ -302,7 +303,7 @@ Background rectangles that visually group other elements. Always place these fir
 | `lineWidth` | number | `1` | Border width |
 | `lineDash` | string | `"solid"` | Border dash style |
 | `label` | string | — | Group label text |
-| `labelFontSize` | number | `9` | Label font size |
+| `labelFontSize` | number | `10` | Label font size |
 | `labelColor` | hex string | `"64748B"` | Label text color |
 | `labelPosition` | string | `"topLeft"` | Label position: `"topLeft"`, `"topRight"`, `"bottomLeft"`, `"bottomRight"` |
 | `fontFace` | string | `"Calibri"` | Label font family |
@@ -476,7 +477,7 @@ Place icon centered above the shape, shape below, description text below the sha
     "type": "text",
     "x": 5.0, "y": 2.55, "w": 1.8, "h": 0.4,
     "text": "Product Catalog\nLogic & Management",
-    "fontSize": 9, "fontItalic": true, "fontColor": "64748B", "align": "center"
+    "fontSize": 10, "fontItalic": true, "fontColor": "64748B", "align": "center"
   }
 ]
 ```
@@ -526,7 +527,7 @@ When no clear icon mapping exists, still add the description text below.
     "type": "text",
     "x": 3.0, "y": 2.65, "w": 2.0, "h": 0.35,
     "text": "Managed API Endpoint\n& Traffic Management",
-    "fontSize": 9, "fontItalic": true, "fontColor": "64748B", "align": "center"
+    "fontSize": 10, "fontItalic": true, "fontColor": "64748B", "align": "center"
   }
 ]
 ```
@@ -631,7 +632,7 @@ Three components with icons above, description text below, connected by labeled 
       "type": "text",
       "x": 1.0, "y": 2.55, "w": 2.0, "h": 0.4,
       "text": "Single-Page App\nReact 18 + TypeScript",
-      "fontSize": 9, "fontItalic": true, "fontColor": "64748B", "align": "center"
+      "fontSize": 10, "fontItalic": true, "fontColor": "64748B", "align": "center"
     },
 
     {
@@ -654,7 +655,7 @@ Three components with icons above, description text below, connected by labeled 
       "type": "text",
       "x": 4.0, "y": 2.55, "w": 2.0, "h": 0.4,
       "text": "Express REST API\nBusiness Logic Layer",
-      "fontSize": 9, "fontItalic": true, "fontColor": "64748B", "align": "center"
+      "fontSize": 10, "fontItalic": true, "fontColor": "64748B", "align": "center"
     },
 
     {
@@ -672,7 +673,7 @@ Three components with icons above, description text below, connected by labeled 
       "type": "text",
       "x": 7.0, "y": 3.05, "w": 2.0, "h": 0.4,
       "text": "Relational Database\nPostgreSQL 15",
-      "fontSize": 9, "fontItalic": true, "fontColor": "64748B", "align": "center"
+      "fontSize": 10, "fontItalic": true, "fontColor": "64748B", "align": "center"
     },
 
     {
@@ -867,6 +868,7 @@ Use one of these curated palettes per diagram. Each palette provides role-based 
 - Connector/border colors use the Neutral value from your chosen palette
 - Group backgrounds use the Light value
 - Darker variant of fill for borders: e.g., Primary `2E5090` → border `1E3A6A`
+- **Color distribution:** Use all 3 fills (Primary, Secondary, Accent) in every diagram. Distribute Accent to at least 2 shapes — avoid monotone palettes. Alternate fills on adjacent shapes so no two neighbors share the same color.
 
 ### Visual Weight Hierarchy
 
@@ -884,12 +886,6 @@ Use a 3-tier visual weight system to create depth and emphasis:
 2. **Shadows imply elevation order.** Higher blur+offset = further from the canvas. Groups (background) get the lightest shadow; primary shapes get the strongest.
 3. **Data-ink ratio:** Every visual element (border, shadow, gradient, icon) must earn its place. If removing an element doesn't reduce clarity, remove it. Decorative borders on Tier 1 shapes add no information — omit them.
 
-### Depth & Visual Weight Rules
-
-1. **Never combine a visible border AND a shadow on the same shape.** Borders say "flat, contained." Shadows say "elevated, floating." Mixing both creates visual tension. Exception: Tier 2 shapes may use a 1pt border as an accent alongside a very light shadow (opacity ≤ 0.2).
-2. **Shadows imply elevation order.** Higher blur+offset = further from the canvas. Groups (background) get the lightest shadow; primary shapes get the strongest.
-3. **Data-ink ratio:** Every visual element (border, shadow, gradient, icon) must earn its place. If removing an element doesn't reduce clarity, remove it. Decorative borders on Tier 1 shapes add no information — omit them.
-
 ### Typography Hierarchy
 
 | Element | fontSize | fontBold | charSpacing | fontColor |
@@ -899,8 +895,8 @@ Use a 3-tier visual weight system to create depth and emphasis:
 | Primary shape labels | 10-11 | true | 1 | `FFFFFF` |
 | Secondary shape labels | 9-10 | false | — | `FFFFFF` |
 | Group labels | 9 | true | 1 | `64748B` |
-| Connector labels | 9 | false | — | `6B7280` |
-| Description text | 9 | false | — | `64748B` |
+| Connector labels | 10 | false | — | `6B7280` |
+| Description text | 10 | false | — | `64748B` |
 | Standalone text | 9-11 | varies | — | `1E293B` |
 
 ### Spacing Standards

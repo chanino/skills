@@ -296,18 +296,19 @@ function renderShape(slide, pres, shapeMap, el) {
   }
 }
 
-function renderConnectorLabel(slide, el, cx, cy) {
+function renderConnectorLabel(slide, el, cx, cy, bgColor) {
   const labelColor = (el.labelColor || "666666").replace(/^#/, "");
   const labelW = el.labelW || Math.max(0.5, Math.min(2.5, el.label.length * 0.08 + 0.2));
   const ox = el.labelOffset || 0;
   const labelOpts = {
     x: cx - labelW / 2 + ox, y: cy - 0.15, w: labelW, h: 0.25,
-    fontSize: el.labelFontSize || 9,
+    fontSize: el.labelFontSize || 10,
     color: labelColor,
     align: "center", valign: "middle",
     fontFace: el.fontFace || "Calibri",
     italic: el.labelItalic || false,
     fit: "shrink",
+    fill: { color: (el.labelBgColor || bgColor || "FFFFFF").replace(/^#/, "") },
   };
   if (el.labelCharSpacing != null) labelOpts.charSpacing = el.labelCharSpacing;
   slide.addText(el.label, labelOpts);
@@ -377,7 +378,7 @@ function renderElbowSegments(slide, pres, lineOpts, el, segments) {
   });
 }
 
-function renderConnector(slide, pres, el, elementPositions) {
+function renderConnector(slide, pres, el, elementPositions, bgColor) {
   const coords = resolveConnectorEndpoints(el, elementPositions);
   const { x1, y1, x2, y2 } = coords;
 
@@ -426,7 +427,7 @@ function renderConnector(slide, pres, el, elementPositions) {
         lx = x1;
         ly = y1 + dy / 2;
       }
-      renderConnectorLabel(slide, el, lx, ly);
+      renderConnectorLabel(slide, el, lx, ly, bgColor);
     }
   } else {
     // Straight connector (explicit opt-in)
@@ -451,7 +452,7 @@ function renderConnector(slide, pres, el, elementPositions) {
     if (el.label) {
       const mx = (x1 + x2) / 2;
       const my = (y1 + y2) / 2;
-      renderConnectorLabel(slide, el, mx, my);
+      renderConnectorLabel(slide, el, mx, my, bgColor);
     }
   }
 }
@@ -690,7 +691,7 @@ async function buildSlideFromJson(spec) {
 
   // Pass 2: Render connectors with resolved endpoints
   for (const el of connectorElements) {
-    renderConnector(slide, pres, el, elementPositions);
+    renderConnector(slide, pres, el, elementPositions, spec.meta.bgColor);
   }
 
   // Footer

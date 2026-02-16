@@ -1,118 +1,115 @@
-# Icon Catalog for Technical Diagrams
+# Icon Catalog
 
-Curated list of react-icons for use with `"type": "icon"` elements. Each entry shows the export name, library, and when to use it.
-
-Install: `npm install -g react react-dom react-icons sharp`
+Pre-generated icons in `assets/icons/`. Use via the `path` field in icon elements — no npm dependencies needed.
 
 ## Infrastructure
 
-| Icon | Library | Name | Use for |
-|------|---------|------|---------|
-| Server | `fa` | `FaServer` | Application servers, compute instances |
-| Database | `fa` | `FaDatabase` | Databases, data stores |
-| Hard Drive | `fa` | `FaHdd` | Storage, disk, volumes |
-| Microchip | `fa` | `FaMicrochip` | Processing units, embedded systems |
-| Network | `fa` | `FaNetworkWired` | Network infrastructure, LAN |
-| Desktop | `fa` | `FaDesktop` | Workstations, client machines |
-| Memory | `fa` | `FaMemory` | RAM, caching layers |
-
-## Cloud
-
-| Icon | Library | Name | Use for |
-|------|---------|------|---------|
-| Cloud | `fa` | `FaCloud` | Generic cloud services |
-| Cloud Upload | `fa` | `FaCloudUploadAlt` | Upload, ingestion, push to cloud |
-| Cloud Download | `fa` | `FaCloudDownloadAlt` | Download, retrieval from cloud |
-| AWS | `si` | `SiAmazonaws` | Amazon Web Services |
-| Google Cloud | `si` | `SiGooglecloud` | Google Cloud Platform |
-| Azure | `si` | `SiMicrosoftazure` | Microsoft Azure |
-| Docker | `fa` | `FaDocker` | Containers, Docker |
-| Kubernetes | `si` | `SiKubernetes` | Kubernetes orchestration |
+| Icon | File | Use for |
+|------|------|---------|
+| Server | `assets/icons/server_rack.png` | App servers, compute instances |
+| Database | `assets/icons/database_cylinder.png` | Databases, data stores |
+| Cloud | `assets/icons/cloud.png` | Generic cloud services |
+| Storage Disk | `assets/icons/storage_disk.png` | Storage, disk, volumes |
+| Lambda Function | `assets/icons/lambda_function.png` | Serverless functions, FaaS |
+| CPU Microchip | `assets/icons/cpu_microchip.png` | Processing units, CPUs |
+| Desktop Computer | `assets/icons/desktop_computer.png` | Workstations, client machines |
+| Network Switch | `assets/icons/network_switch.png` | Network infrastructure, switches |
 
 ## Security
 
-| Icon | Library | Name | Use for |
-|------|---------|------|---------|
-| Shield | `fa` | `FaShieldAlt` | Security boundary, protection |
-| Lock | `fa` | `FaLock` | Encryption, authentication |
-| Key | `fa` | `FaKey` | API keys, credentials, secrets |
-| User Shield | `fa` | `FaUserShield` | Identity protection, IAM |
-| Fingerprint | `fa` | `FaFingerprint` | Biometrics, identity verification |
+| Icon | File | Use for |
+|------|------|---------|
+| Shield | `assets/icons/shield.png` | Security boundary, protection |
+| Padlock | `assets/icons/padlock.png` | Encryption, authentication |
+| Key | `assets/icons/key.png` | API keys, credentials, secrets |
 
-## People & Organizations
+## People
 
-| Icon | Library | Name | Use for |
-|------|---------|------|---------|
-| User | `fa` | `FaUser` | Single user, actor |
-| Users | `fa` | `FaUsers` | User groups, teams |
-| User Cog | `fa` | `FaUserCog` | Admin user, operator |
-| User Group | `hi` | `HiUserGroup` | Teams, organizations |
-| Building | `fa` | `FaBuilding` | Organization, enterprise |
+| Icon | File | Use for |
+|------|------|---------|
+| Person | `assets/icons/person_silhouette.png` | Single user, actor |
+| Group of People | `assets/icons/group_of_people.png` | User groups, teams |
 
-## Data & Files
+## Network
 
-| Icon | Library | Name | Use for |
-|------|---------|------|---------|
-| File | `fa` | `FaFileAlt` | Documents, files |
-| Folder | `fa` | `FaFolder` | Directories, file systems |
-| Bar Chart | `fa` | `FaChartBar` | Analytics, reporting |
-| Table | `fa` | `FaTable` | Tabular data, spreadsheets |
-| File Export | `fa` | `FaFileExport` | Data export, ETL output |
-| File Import | `fa` | `FaFileImport` | Data import, ingestion |
+| Icon | File | Use for |
+|------|------|---------|
+| Globe | `assets/icons/globe_internet.png` | Internet, web, global |
+| Router | `assets/icons/network_router.png` | Routing, network paths |
+| Data Exchange | `assets/icons/data_exchange_arrows.png` | Data sync, bidirectional flow |
+| Broadcast Tower | `assets/icons/broadcast_tower.png` | Broadcasting, pub/sub, events |
 
-## Network & Communication
+## Operations
 
-| Icon | Library | Name | Use for |
-|------|---------|------|---------|
-| WiFi | `fa` | `FaWifi` | Wireless, connectivity |
-| Globe | `fa` | `FaGlobe` | Internet, web, global |
-| Sitemap | `fa` | `FaSitemap` | Hierarchy, org chart, topology |
-| Route | `fa` | `FaRoute` | Routing, paths, pipelines |
-| Exchange | `fa` | `FaExchangeAlt` | Data exchange, sync, bidirectional |
-| Envelope | `fa` | `FaEnvelope` | Email, messaging |
-| Broadcast Tower | `fa` | `FaBroadcastTower` | Broadcasting, pub/sub, events |
+| Icon | File | Use for |
+|------|------|---------|
+| Gear Settings | `assets/icons/gear_settings.png` | Settings, configuration |
+| Rocket Launch | `assets/icons/rocket_launch.png` | Deployment, launch |
+| Sync Refresh | `assets/icons/sync_refresh_arrows.png` | Refresh, synchronization |
 
-## Development & CI/CD
+## Status
 
-| Icon | Library | Name | Use for |
-|------|---------|------|---------|
-| Code | `fa` | `FaCode` | Source code, development |
-| Git | `fa` | `FaGitAlt` | Version control, Git |
-| Cogs | `fa` | `FaCogs` | Settings, configuration, processing |
-| Terminal | `fa` | `FaTerminal` | CLI, command line, shell |
-| Code Branch | `fa` | `FaCodeBranch` | Branching, version control |
-| Bug | `fa` | `FaBug` | Debugging, issues, testing |
-| Rocket | `fa` | `FaRocket` | Deployment, launch |
+| Icon | File | Use for |
+|------|------|---------|
+| Checkmark | `assets/icons/checkmark_circle.png` | Success, approved, complete |
+| Warning | `assets/icons/warning_triangle.png` | Warning, caution |
+| Error X | `assets/icons/error_x_circle.png` | Error, failure, blocked |
 
-## Status & Indicators
+## Data
 
-| Icon | Library | Name | Use for |
-|------|---------|------|---------|
-| Check Circle | `fa` | `FaCheckCircle` | Success, approved, complete |
-| Warning | `fa` | `FaExclamationTriangle` | Warning, caution |
-| Error | `fa` | `FaTimesCircle` | Error, failure, blocked |
-| Bell | `fa` | `FaBell` | Notifications, alerts |
-| Info Circle | `fa` | `FaInfoCircle` | Information, help |
-| Sync | `fa` | `FaSync` | Refresh, synchronization |
+| Icon | File | Use for |
+|------|------|---------|
+| Document | `assets/icons/document_file.png` | Documents, files |
+| Bar Chart | `assets/icons/bar_chart_analytics.png` | Analytics, reporting |
 
-## Usage Example
+---
+
+## Usage
+
+Use path-based icons in JSON specs — no npm install needed:
 
 ```json
-{
-  "type": "icon",
-  "name": "FaServer",
-  "library": "fa",
-  "x": 2.3,
-  "y": 1.3,
-  "w": 0.4,
-  "h": 0.4,
-  "color": "4A90E2"
-}
+{ "type": "icon", "path": "assets/icons/server_rack.png", "x": 2.5, "y": 1.5, "w": 0.4, "h": 0.4 }
 ```
+
+Paths starting with `assets/icons/` are resolved relative to the skill root automatically by `build_slide.js`.
 
 **Tips:**
 - Place icons above or beside their associated shape for visual reinforcement
-- Use 0.3"–0.5" size for icons next to shapes, 0.5"–0.8" for standalone icons
-- Match icon color to the shape's fill color for cohesion
+- Use 0.3"--0.5" size for icons next to shapes, 0.5"--0.8" for standalone icons
 - Don't overuse icons — 3-5 per diagram is typically enough
-- Stick to the `fa` (Font Awesome) library unless you need specific brand icons from `si` (Simple Icons)
+- All 25 icons use a consistent dark navy blue style for visual coherence
+
+---
+
+## Custom Icons via Gemini
+
+For concepts not in the catalog above, generate custom icons using `scripts/generate_icon.py`:
+
+```bash
+# Single icon
+python3 scripts/generate_icon.py "API gateway" --color "dark navy blue" -o /tmp/icons/api_gateway.png
+
+# Batch of custom icons
+python3 scripts/generate_icon.py \
+  --batch "API gateway,data lake,IoT sensor,message queue" \
+  --color "dark navy blue" \
+  --output-dir /tmp/icons/
+```
+
+Use the generated icons with the `path` field:
+```json
+{ "type": "icon", "path": "/tmp/icons/api_gateway.png", "x": 2.5, "y": 1.5, "w": 0.4, "h": 0.4 }
+```
+
+See **Step 1b** in `SKILL.md` for the full workflow and CLI options.
+
+---
+
+## Deprecated: react-icons (fallback)
+
+The `name`/`library` fields still work for backward compatibility but require 4 npm packages (react, react-dom, react-icons, sharp). Prefer `path`-based icons from `assets/icons/`.
+
+```json
+{ "type": "icon", "name": "FaServer", "library": "fa", "x": 2.5, "y": 1.5, "w": 0.4, "h": 0.4, "color": "4A90E2" }
+```

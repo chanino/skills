@@ -145,7 +145,7 @@ This is the core step. You will translate the **structural text description** fr
 - **Assign `id` to every shape that will have connectors.** Use `from`/`to` connector anchoring with `fromSide`/`toSide` instead of manual coordinate calculation — this is the single most effective way to eliminate visual errors
 - Use `connector` for arrows between shapes. Prefer shape-anchored mode (`from`/`to`) over absolute coordinates (`x1,y1,x2,y2`)
 - Connectors default to `route: "elbow"` (orthogonal L-shaped paths with chamfered corners). Use `route: "straight"` only when two shapes share the exact same X or Y coordinate
-- **Select a consulting palette** from shape-spec.md (Corporate Blue, Warm Professional, Modern Slate, or Forest Green). Use max 3 fill colors. **Never use bright saturated primaries** (`3B82F6`, `EF4444`, `10B981`, `F59E0B`)
+- **Select a consulting palette** from shape-spec.md (Corporate Blue, Warm Professional, Modern Slate, or Forest Green). Use max 3 fill colors. Distribute all 3 colors across shapes. Assign Accent to at least 2 shapes per diagram. **Never use bright saturated primaries** (`3B82F6`, `EF4444`, `10B981`, `F59E0B`)
 - **Apply visual weight hierarchy** — use the 3-tier shadow/border system from shape-spec.md: Tier 1 (primary: dark fill, borderless, strong shadow), Tier 2 (secondary: medium fill, borderless, moderate shadow), Tier 3 (backgrounds: light fill, soft shadow). Never combine borders and shadows on the same element
 - **Typography polish** — add `charSpacing: 1` on primary shape labels, `charSpacing: 1.5` on title via `meta.titleCharSpacing`, use `margin: [8,10,8,10]` for breathing room inside shapes
 - **Generous spacing** — minimum 0.4" gap between adjacent shapes, 0.2" padding inside groups
@@ -167,23 +167,23 @@ This is the core step. You will translate the **structural text description** fr
 - Cylinder: min `h` = 1.0"
 - Architecture diagram shapes: min `w` = 1.8", recommended 2.0"+ to accommodate icon + label
 - Leave 0.05" gap between icon and shape top, 0.05" gap between shape bottom and description text
-- Minimum font size: 9pt for all text elements (labels, descriptions, connector labels, textRuns)
+- Minimum font size: 9pt absolute floor; 10pt default for connector labels and description text
 - Always rely on default `fit: "shrink"` as safety net
 
 **Component stack pattern** (architecture diagrams):
 For each major component, create a vertical stack:
 1. `icon` element (0.35" × 0.35") centered above the shape
 2. `shape` element with bold service name (min 1.8" wide)
-3. `text` element below with 1-2 line italic description (fontSize 9, fontColor "64748B")
+3. `text` element below with 1-2 line italic description (fontSize 10, fontColor "64748B")
 
 Example — one Lambda component:
   icon:  { x: 5.55, y: 1.5, w: 0.35, h: 0.35, path: "assets/icons/lambda_function.png" }
   shape: { x: 5.0,  y: 1.9, w: 1.8,  h: 0.6,  label: "Products Lambda" }
-  text:  { x: 5.0,  y: 2.55, w: 1.8, h: 0.4, text: "Product Catalog\nLogic & Management", fontSize: 9, fontItalic: true, align: "center" }
+  text:  { x: 5.0,  y: 2.55, w: 1.8, h: 0.4, text: "Product Catalog\nLogic & Management", fontSize: 10, fontItalic: true, align: "center" }
 
 This pattern makes diagrams instantly scannable — users recognize components by icon before reading text.
 
-**Description text:** For architecture and cloud diagrams, add a small italic `text` element (fontSize 9, fontColor "64748B") below each major shape with a 1-2 line role description. This is what makes reference images feel information-rich.
+**Description text:** For architecture and cloud diagrams, add a small italic `text` element (fontSize 10, fontColor "64748B") below each major shape with a 1-2 line role description. This is what makes reference images feel information-rich.
 
 **Swim lane pattern:** For CONOPS/swim lane diagrams:
 1. Create `group` elements for lane backgrounds with NO `label`
@@ -198,6 +198,7 @@ This pattern makes diagrams instantly scannable — users recognize components b
 - Vertical flows: elbow connectors, `fromSide: "bottom"` → `toSide: "top"` (use `route: "straight"` only when shapes share exact same X)
 - Cross-lane: use `route: "elbow"`
 - Use `labelOffset` to shift labels away from shape overlap
+- Labels auto-fill with `meta.bgColor`. Set `labelBgColor` on connectors over non-white group backgrounds
 
 ## Step 5: Build the PPTX
 
