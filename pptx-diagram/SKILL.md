@@ -28,10 +28,57 @@ Based on the user's request, build a detailed prompt that specifies:
 - Component count kept reasonable (5-10 major elements)
 - "No watermarks, no stock photo artifacts"
 
+## Step 1b: Icons (Pre-generated Library + Custom Generation)
+
+A library of 25 pre-generated icons is available in `assets/icons/` — these cover 90%+ of technical diagram needs (servers, databases, clouds, security, people, status indicators, etc.). See `references/icon-catalog.md` for the full catalog.
+
+**Default workflow:** Use pre-generated icons from `assets/icons/` via the `path` field. No npm dependencies needed.
+
+```json
+{ "type": "icon", "path": "assets/icons/server_rack.png", "x": 2.5, "y": 1.5, "w": 0.35, "h": 0.35 }
+```
+
+**When to generate custom icons:** Only for concepts not in the catalog (e.g., "API gateway", "data lake", "IoT sensor").
+
+```bash
+# Single custom icon
+python3 scripts/generate_icon.py "API gateway" --color "dark navy blue" -o /tmp/icons/api_gateway.png
+
+# Batch of custom icons
+python3 scripts/generate_icon.py \
+  --batch "API gateway,data lake,IoT sensor,message queue" \
+  --color "dark navy blue" \
+  --output-dir /tmp/icons/
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `description` (positional) | -- | Icon description (single mode) |
+| `--batch` | -- | Comma-separated icon descriptions (batch mode) |
+| `--color` | `"dark navy blue"` | Icon color |
+| `--style` | `"flat minimalist technical icon"` | Style keywords |
+| `--output-dir` | `/tmp/icons/` | Batch output directory |
+| `-o` / `--output` | -- | Single-mode output path |
+| `--icon-size` | `256` | Final PNG size in pixels |
+| `--gen-size` | `1K` | Gemini generation size before post-processing |
+| `--no-cache` | `false` | Skip cache lookup and force regeneration |
+| `--cache-dir` | `~/.cache/pptx-diagram-icons/` | Override cache directory |
+
+**Caching:** Icons are cached automatically after first generation. On subsequent runs with the same description, color, style, and size, the cached PNG is reused instantly (no Gemini call). Pre-generated icons in `assets/icons/` also serve as a cache tier for default-parameter requests. Use `--no-cache` to force regeneration (e.g., if quality was unsatisfactory). Cache location: `~/.cache/pptx-diagram-icons/`.
+
+**QA check:** After generation, view the PNGs to verify icons are recognizable and visually consistent. Regenerate individual failures with adjusted prompts (use `--no-cache` to bypass the cache).
+
+**Using custom icons in the diagram:** In Step 4, use `path`:
+```json
+{ "type": "icon", "path": "/tmp/icons/api_gateway.png", "x": 2.5, "y": 1.5, "w": 0.35, "h": 0.35 }
+```
+
+Pre-generated and custom icons can be mixed freely in the same diagram.
+
 ## Step 2: Generate the Reference Image
 
 ```bash
-python3 scripts/generate_image.py "YOUR DETAILED PROMPT HERE" -o /tmp/diagram.png
+python3 ../gemini-image/scripts/generate_image.py "YOUR DETAILED PROMPT HERE" -o /tmp/diagram.png
 ```
 
 **QA check:** After generation, view the image file (`/tmp/diagram.png`) to verify:
@@ -51,7 +98,7 @@ Use `image_to_text.py` (Gemini vision) to extract a detailed structural descript
 **Call 1 — Structural layout description** (the key piece):
 
 ```bash
-python3 scripts/image_to_text.py -i /tmp/diagram.png "Describe the structural layout of this technical diagram in precise detail. For every shape: state its type (rectangle, rounded rectangle, diamond, oval, cylinder, cloud), approximate position (left/center/right, top/middle/bottom), approximate size relative to the slide, fill color, border color, and the exact text label inside it. For every arrow or connector: state its start element, end element, direction, line style (solid, dashed), arrowhead style, and any label text. For any background grouping boxes: state their position, size, fill color, border color, and label. For any divider lines: state orientation, position, and style. For standalone text labels: state their content, position, and styling. For any icons or visual symbols: describe their type (server, database, cloud, shield, lambda, bucket, etc.), position relative to their shape, and approximate size. For any description or annotation text below shapes: capture the exact text content. Describe the overall layout grid (how many columns/rows, spacing pattern)."
+python3 ../gemini-image/scripts/image_to_text.py -i /tmp/diagram.png "Describe the structural layout of this technical diagram in precise detail. For every shape: state its type (rectangle, rounded rectangle, diamond, oval, cylinder, cloud), approximate position (left/center/right, top/middle/bottom), approximate size relative to the slide, fill color, border color, and the exact text label inside it. For every arrow or connector: state its start element, end element, direction, line style (solid, dashed), arrowhead style, and any label text. For any background grouping boxes: state their position, size, fill color, border color, and label. For any divider lines: state orientation, position, and style. For standalone text labels: state their content, position, and styling. For any icons or visual symbols: describe their type (server, database, cloud, shield, lambda, bucket, etc.), position relative to their shape, and approximate size. For any description or annotation text below shapes: capture the exact text content. Describe the overall layout grid (how many columns/rows, spacing pattern)."
 ```
 
 Save the output to `/tmp/diagram-layout.txt`.
@@ -59,7 +106,7 @@ Save the output to `/tmp/diagram-layout.txt`.
 **Call 2 — Alt text** (accessibility summary):
 
 ```bash
-python3 scripts/image_to_text.py -i /tmp/diagram.png "Describe this technical diagram in 2-3 sentences for screen reader alt text. Focus on the type of diagram, the key components shown, and the main relationships or data flow depicted."
+python3 ../gemini-image/scripts/image_to_text.py -i /tmp/diagram.png "Describe this technical diagram in 2-3 sentences for screen reader alt text. Focus on the type of diagram, the key components shown, and the main relationships or data flow depicted."
 ```
 
 Review the output and trim to a concise 2-3 sentence alt text summary.
@@ -67,7 +114,7 @@ Review the output and trim to a concise 2-3 sentence alt text summary.
 **Call 3 — Full description** (for `.description.md`):
 
 ```bash
-python3 scripts/image_to_text.py -i /tmp/diagram.png "Provide a detailed description of this technical diagram. Describe each component, their relationships, data flows, and the overall purpose of the diagram."
+python3 ../gemini-image/scripts/image_to_text.py -i /tmp/diagram.png "Provide a detailed description of this technical diagram. Describe each component, their relationships, data flows, and the overall purpose of the diagram."
 ```
 
 ## Step 4: Create JSON Shape Specification
@@ -97,9 +144,9 @@ This is the core step. You will translate the **structural text description** fr
 - Use `shape` for all boxes, ovals, diamonds, cylinders, etc.
 - **Assign `id` to every shape that will have connectors.** Use `from`/`to` connector anchoring with `fromSide`/`toSide` instead of manual coordinate calculation — this is the single most effective way to eliminate visual errors
 - Use `connector` for arrows between shapes. Prefer shape-anchored mode (`from`/`to`) over absolute coordinates (`x1,y1,x2,y2`)
-- Use `"route": "elbow"` for connectors that need orthogonal L-shaped paths
+- Connectors default to `route: "elbow"` (orthogonal L-shaped paths with chamfered corners). Use `route: "straight"` only when two shapes share the exact same X or Y coordinate
 - **Select a consulting palette** from shape-spec.md (Corporate Blue, Warm Professional, Modern Slate, or Forest Green). Use max 3 fill colors. **Never use bright saturated primaries** (`3B82F6`, `EF4444`, `10B981`, `F59E0B`)
-- **Apply visual weight hierarchy** — use the 3-tier shadow/border system from shape-spec.md: Tier 1 (primary: dark fill, borderless, strong shadow), Tier 2 (secondary: medium fill, thin border, light shadow), Tier 3 (backgrounds: light fill, soft shadow)
+- **Apply visual weight hierarchy** — use the 3-tier shadow/border system from shape-spec.md: Tier 1 (primary: dark fill, borderless, strong shadow), Tier 2 (secondary: medium fill, borderless, moderate shadow), Tier 3 (backgrounds: light fill, soft shadow). Never combine borders and shadows on the same element
 - **Typography polish** — add `charSpacing: 1` on primary shape labels, `charSpacing: 1.5` on title via `meta.titleCharSpacing`, use `margin: [8,10,8,10]` for breathing room inside shapes
 - **Generous spacing** — minimum 0.4" gap between adjacent shapes, 0.2" padding inside groups
 - **Data-ink ratio** — every visual element (border, shadow, decoration) must convey information. Apply the removal test: if removing it doesn't reduce clarity, remove it. Don't add borders to Tier 1 shapes that already have dark fills + strong shadows
@@ -109,7 +156,7 @@ This is the core step. You will translate the **structural text description** fr
 - Use `textRuns` for primary shapes that need title + subtitle formatting (e.g., service name + version or role)
 - Use `text` for standalone labels (lane names, phase headers, annotations)
 - Use `divider` for separator lines
-- Use `icon` for visual icons — **strongly recommended** for architecture, cloud, and network diagrams. Place a 0.35"×0.35" icon above or inside each major shape. See `references/icon-catalog.md` for names. Skip only for abstract concepts with no clear icon mapping
+- Use `icon` for visual icons — **strongly recommended** for architecture, cloud, and network diagrams. Place a 0.35"×0.35" icon above or inside each major shape. Use pre-generated icons from `assets/icons/` via `path` field (see `references/icon-catalog.md`). Skip only for abstract concepts with no clear icon mapping
 - Map described elements to appropriate shape types using the structural description
 - Use `fontFace` for font control (default: "Calibri"), `fontItalic`/`fontUnderline` for styling. Text auto-shrinks to fit by default (`fit: "shrink"`) — this is a safety net, not a substitute for proper sizing
 
@@ -120,22 +167,23 @@ This is the core step. You will translate the **structural text description** fr
 - Cylinder: min `h` = 1.0"
 - Architecture diagram shapes: min `w` = 1.8", recommended 2.0"+ to accommodate icon + label
 - Leave 0.05" gap between icon and shape top, 0.05" gap between shape bottom and description text
+- Minimum font size: 9pt for all text elements (labels, descriptions, connector labels, textRuns)
 - Always rely on default `fit: "shrink"` as safety net
 
 **Component stack pattern** (architecture diagrams):
 For each major component, create a vertical stack:
 1. `icon` element (0.35" × 0.35") centered above the shape
 2. `shape` element with bold service name (min 1.8" wide)
-3. `text` element below with 1-2 line italic description (fontSize 7, fontColor "64748B")
+3. `text` element below with 1-2 line italic description (fontSize 9, fontColor "64748B")
 
 Example — one Lambda component:
-  icon:  { x: 5.55, y: 1.5, w: 0.35, h: 0.35, name: "FaCode", color: "FFFFFF" }
+  icon:  { x: 5.55, y: 1.5, w: 0.35, h: 0.35, path: "assets/icons/lambda_function.png" }
   shape: { x: 5.0,  y: 1.9, w: 1.8,  h: 0.6,  label: "Products Lambda" }
-  text:  { x: 5.0,  y: 2.55, w: 1.8, h: 0.4, text: "Product Catalog\nLogic & Management", fontSize: 7, fontItalic: true, align: "center" }
+  text:  { x: 5.0,  y: 2.55, w: 1.8, h: 0.4, text: "Product Catalog\nLogic & Management", fontSize: 9, fontItalic: true, align: "center" }
 
 This pattern makes diagrams instantly scannable — users recognize components by icon before reading text.
 
-**Description text:** For architecture and cloud diagrams, add a small italic `text` element (fontSize 7-8, fontColor "64748B") below each major shape with a 1-2 line role description. This is what makes reference images feel information-rich.
+**Description text:** For architecture and cloud diagrams, add a small italic `text` element (fontSize 9, fontColor "64748B") below each major shape with a 1-2 line role description. This is what makes reference images feel information-rich.
 
 **Swim lane pattern:** For CONOPS/swim lane diagrams:
 1. Create `group` elements for lane backgrounds with NO `label`
@@ -144,8 +192,10 @@ This pattern makes diagrams instantly scannable — users recognize components b
 4. Create separate `text` elements for phase headers ABOVE the diagram area
 
 **Connector routing strategy:**
-- Horizontal flows: straight connectors, `fromSide: "right"` → `toSide: "left"`
-- Vertical flows: straight connectors, `fromSide: "bottom"` → `toSide: "top"`
+- Default: `route: "elbow"` — all connectors should be orthogonal (parallel or perpendicular to slide margins)
+- Never use diagonal connectors. All lines must be parallel or perpendicular to slide margins
+- Horizontal flows: elbow connectors, `fromSide: "right"` → `toSide: "left"` (use `route: "straight"` only when shapes share exact same Y)
+- Vertical flows: elbow connectors, `fromSide: "bottom"` → `toSide: "top"` (use `route: "straight"` only when shapes share exact same X)
 - Cross-lane: use `route: "elbow"`
 - Use `labelOffset` to shift labels away from shape overlap
 

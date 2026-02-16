@@ -58,6 +58,31 @@ function resolveIconComponent(name, library) {
 }
 
 async function renderIcon(slide, el) {
+  // Path-based icon: read PNG directly from disk (bypasses react-icons)
+  if (el.path) {
+    let iconPath = path.resolve(el.path);
+    if (!fs.existsSync(iconPath)) {
+      // Fallback: resolve relative to skill root (parent of scripts/)
+      const skillDir = path.resolve(__dirname, "..");
+      iconPath = path.resolve(skillDir, el.path);
+    }
+    if (!fs.existsSync(iconPath)) {
+      console.warn(`Skipping icon — file not found: ${el.path}`);
+      return;
+    }
+    const buf = fs.readFileSync(iconPath);
+    slide.addImage({
+      data: `image/png;base64,${buf.toString("base64")}`,
+      x: el.x, y: el.y, w: el.w, h: el.h,
+    });
+    return;
+  }
+
+  // Deprecated fallback: react-icons rendering (use path-based icons instead)
+  if (el.name) {
+    console.warn(`[DEPRECATED] Icon "${el.name}" uses react-icons. Prefer path-based icons from assets/icons/.`);
+  }
+
   if (!loadIconDeps()) {
     console.warn(`Skipping icon element "${el.name}" — icon dependencies not installed.`);
     return;
@@ -277,7 +302,7 @@ function renderConnectorLabel(slide, el, cx, cy) {
   const ox = el.labelOffset || 0;
   const labelOpts = {
     x: cx - labelW / 2 + ox, y: cy - 0.15, w: labelW, h: 0.25,
-    fontSize: el.labelFontSize || 8,
+    fontSize: el.labelFontSize || 9,
     color: labelColor,
     align: "center", valign: "middle",
     fontFace: el.fontFace || "Calibri",
@@ -288,6 +313,70 @@ function renderConnectorLabel(slide, el, cx, cy) {
   slide.addText(el.label, labelOpts);
 }
 
+// Chamfer radius for elbow connector corners (inches)
+const ELBOW_RADIUS = 0.06;
+
+function renderElbowSegments(slide, pres, lineOpts, el, segments) {
+  // Try to chamfer each bend between consecutive segments.
+  // A chamfer shortens the two meeting segments by ELBOW_RADIUS and inserts
+  // a short diagonal segment between the shortened endpoints.
+  // Graceful degradation: if a segment is shorter than 2× radius, skip chamfer.
+
+  const chamferSegs = [];
+  for (let i = 0; i < segments.length; i++) {
+    const seg = { ...segments[i] };
+    const segLen = Math.abs(seg.x2 - seg.x1) + Math.abs(seg.y2 - seg.y1);
+
+    // Shorten end of this segment toward next bend
+    if (i < segments.length - 1) {
+      const next = segments[i + 1];
+      const nextLen = Math.abs(next.x2 - next.x1) + Math.abs(next.y2 - next.y1);
+      if (segLen >= 2 * ELBOW_RADIUS && nextLen >= 2 * ELBOW_RADIUS) {
+        // Direction of this segment's endpoint → next segment start
+        const edx = seg.x2 === seg.x1 ? 0 : (seg.x2 > seg.x1 ? -1 : 1);
+        const edy = seg.y2 === seg.y1 ? 0 : (seg.y2 > seg.y1 ? -1 : 1);
+        const shortenedEnd = { x: seg.x2 + edx * ELBOW_RADIUS, y: seg.y2 + edy * ELBOW_RADIUS };
+
+        // Direction of next segment from its start
+        const ndx = next.x2 === next.x1 ? 0 : (next.x2 > next.x1 ? 1 : -1);
+        const ndy = next.y2 === next.y1 ? 0 : (next.y2 > next.y1 ? 1 : -1);
+        const shortenedStart = { x: next.x1 + ndx * ELBOW_RADIUS, y: next.y1 + ndy * ELBOW_RADIUS };
+
+        seg.x2 = shortenedEnd.x;
+        seg.y2 = shortenedEnd.y;
+        chamferSegs.push(seg);
+        // Insert chamfer diagonal
+        chamferSegs.push({ x1: shortenedEnd.x, y1: shortenedEnd.y, x2: shortenedStart.x, y2: shortenedStart.y, _chamfer: true });
+        // Shorten start of next segment (mutate in place for next iteration)
+        segments[i + 1] = { ...next, x1: shortenedStart.x, y1: shortenedStart.y };
+      } else {
+        // Segments too short for chamfer — keep sharp corner
+        chamferSegs.push(seg);
+      }
+    } else {
+      chamferSegs.push(seg);
+    }
+  }
+
+  chamferSegs.forEach((seg, i) => {
+    const sdx = seg.x2 - seg.x1;
+    const sdy = seg.y2 - seg.y1;
+    const sx = Math.min(seg.x1, seg.x2);
+    const sy = Math.min(seg.y1, seg.y2);
+    const sw = Math.abs(sdx) || 0.001;
+    const sh = Math.abs(sdy) || 0.001;
+    const segLine = { ...lineOpts };
+    segLine.beginArrowType = i === 0 ? (el.startArrow || "none") : "none";
+    segLine.endArrowType = i === chamferSegs.length - 1 ? (el.endArrow || "triangle") : "none";
+
+    slide.addShape(pres.shapes.LINE, {
+      x: sx, y: sy, w: sw, h: sh,
+      flipH: sdx < 0, flipV: sdy < 0,
+      line: segLine,
+    });
+  });
+}
+
 function renderConnector(slide, pres, el, elementPositions) {
   const coords = resolveConnectorEndpoints(el, elementPositions);
   const { x1, y1, x2, y2 } = coords;
@@ -295,12 +384,15 @@ function renderConnector(slide, pres, el, elementPositions) {
   const lineColor = (el.lineColor || "333333").replace(/^#/, "");
   const lineOpts = {
     color: lineColor,
-    width: el.lineWidth || 1.5,
+    width: el.lineWidth || 2.0,
     dashType: el.lineDash || "solid",
   };
 
-  if (el.route === "elbow") {
-    // Elbow routing: 3-segment orthogonal path
+  // Default to elbow routing; use straight only when explicitly requested
+  const route = el.route || "elbow";
+
+  if (route === "elbow") {
+    // Elbow routing: 3-segment orthogonal path with chamfered corners
     const dx = x2 - x1;
     const dy = y2 - y1;
     let segments;
@@ -322,24 +414,7 @@ function renderConnector(slide, pres, el, elementPositions) {
       ];
     }
 
-    segments.forEach((seg, i) => {
-      const sdx = seg.x2 - seg.x1;
-      const sdy = seg.y2 - seg.y1;
-      const sx = Math.min(seg.x1, seg.x2);
-      const sy = Math.min(seg.y1, seg.y2);
-      const sw = Math.abs(sdx) || 0.001;
-      const sh = Math.abs(sdy) || 0.001;
-      const segLine = { ...lineOpts };
-      // First segment: start arrow; last segment: end arrow; middle: none
-      segLine.beginArrowType = i === 0 ? (el.startArrow || "none") : "none";
-      segLine.endArrowType = i === segments.length - 1 ? (el.endArrow || "triangle") : "none";
-
-      slide.addShape(pres.shapes.LINE, {
-        x: sx, y: sy, w: sw, h: sh,
-        flipH: sdx < 0, flipV: sdy < 0,
-        line: segLine,
-      });
-    });
+    renderElbowSegments(slide, pres, lineOpts, el, segments);
 
     // Label at bend point
     if (el.label) {
@@ -354,7 +429,7 @@ function renderConnector(slide, pres, el, elementPositions) {
       renderConnectorLabel(slide, el, lx, ly);
     }
   } else {
-    // Straight connector (default)
+    // Straight connector (explicit opt-in)
     const dx = x2 - x1;
     const dy = y2 - y1;
     const x = Math.min(x1, x2);

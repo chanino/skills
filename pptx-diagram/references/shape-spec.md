@@ -174,14 +174,14 @@ Connectors can reference shapes by `id` (recommended) or use absolute coordinate
 | `toSide` | string | `"left"` | Which edge of the target shape: `"left"`, `"right"`, `"top"`, `"bottom"` |
 | `x1`, `y1` | number | — | Start point in inches (used when `from` is not set) |
 | `x2`, `y2` | number | — | End point in inches (used when `to` is not set) |
-| `route` | string | `"straight"` | Routing mode: `"straight"` (direct line) or `"elbow"` (orthogonal L-path) |
+| `route` | string | `"elbow"` | Routing mode: `"elbow"` (orthogonal L-path, default) or `"straight"` (direct line — use only when shapes share exact same X or Y) |
 | `lineColor` | hex string | `"333333"` | Line color |
-| `lineWidth` | number | `1.5` | Line width in points |
+| `lineWidth` | number | `2.0` | Line width in points |
 | `lineDash` | string | `"solid"` | Line dash style |
 | `startArrow` | string | `"none"` | Arrow at start point (see Arrow Types) |
 | `endArrow` | string | `"triangle"` | Arrow at end point |
 | `label` | string | — | Text label at the midpoint (straight) or bend point (elbow) |
-| `labelFontSize` | number | `8` | Label font size |
+| `labelFontSize` | number | `9` | Label font size |
 | `labelColor` | hex string | `"666666"` | Label text color |
 | `fontFace` | string | `"Calibri"` | Label font family |
 | `labelItalic` | boolean | `false` | Label italic styling |
@@ -195,7 +195,7 @@ Connectors can reference shapes by `id` (recommended) or use absolute coordinate
 - `"top"` → `(x + w/2, y)`
 - `"bottom"` → `(x + w/2, y + h)`
 
-**Elbow routing:** Renders 3 LINE segments. Horizontal-first if `|dx| ≥ |dy|`, vertical-first otherwise. The label is placed at the bend point.
+**Elbow routing (default):** Renders 3 LINE segments with chamfered corners (0.06" radius). Horizontal-first if `|dx| ≥ |dy|`, vertical-first otherwise. The label is placed at the bend point. Chamfers gracefully degrade to sharp corners if segments are shorter than 2× the radius.
 
 **Fallback:** If `from`/`to` are not set or reference unknown IDs, the connector falls back to `x1,y1,x2,y2` absolute coordinates (full backward compatibility).
 
@@ -313,33 +313,31 @@ Background rectangles that visually group other elements. Always place these fir
 | `labelCharSpacing` | number | — | Character spacing for group label in points |
 | `labelW` | number | auto | Override auto-calculated label width in inches |
 
-### `icon` — Rasterized react-icons images
+### `icon` — Pre-generated or custom PNG icons
 
-Renders a react-icons icon as a rasterized PNG embedded in the slide. Requires `react`, `react-dom`, `react-icons`, and `sharp` to be installed globally. If dependencies are missing, icon elements are skipped gracefully.
+Embeds a PNG icon image in the slide. Use the pre-generated library in `assets/icons/` (25 icons covering common technical diagram concepts) or generate custom icons via `scripts/generate_icon.py`.
 
+**Path-based icons** (recommended):
 ```json
-{
-  "type": "icon",
-  "name": "FaServer",
-  "library": "fa",
-  "x": 2.5, "y": 1.5, "w": 0.4, "h": 0.4,
-  "color": "4A90E2"
-}
+{ "type": "icon", "path": "assets/icons/server_rack.png", "x": 2.5, "y": 1.5, "w": 0.4, "h": 0.4 }
 ```
+
+Paths starting with `assets/icons/` are resolved relative to the skill root automatically. Absolute paths (e.g. `/tmp/icons/custom.png`) also work.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `name` | string | — | **Required.** react-icons export name (e.g. `FaServer`, `SiAmazonaws`) |
-| `library` | string | `"fa"` | Icon pack: `fa` (Font Awesome), `md` (Material Design), `hi` (Heroicons), `bs` (Bootstrap), `si` (Simple Icons), `tb` (Tabler) |
+| `path` | string | — | **Recommended.** File path to a PNG image. Resolved relative to skill root or as absolute path. |
 | `x`, `y` | number | — | **Required.** Top-left position in inches |
 | `w`, `h` | number | — | **Required.** Display size in inches |
-| `color` | hex string | `"333333"` | Icon fill color (no `#` prefix) |
+| `name` | string | — | **Deprecated fallback.** react-icons export name (e.g. `FaServer`). Requires react, react-dom, react-icons, sharp installed globally. |
+| `library` | string | `"fa"` | **Deprecated fallback.** Icon pack for react-icons: `fa`, `md`, `hi`, `bs`, `si`, `tb` |
+| `color` | hex string | `"333333"` | Icon fill color for react-icons only (ignored for path-based icons) |
 
-See `references/icon-catalog.md` for a curated list of icons organized by category.
+See `references/icon-catalog.md` for the full catalog of pre-generated icons organized by category.
 
 **Placement tips:**
 - Place icons slightly above or to the left of their associated shape label
-- Typical icon size: 0.3"–0.5" for inline icons, 0.5"–0.8" for standalone icons
+- Typical icon size: 0.3"--0.5" for inline icons, 0.5"--0.8" for standalone icons
 - Icons render as images, not native shapes — they cannot be recolored in PowerPoint
 
 ---
@@ -429,7 +427,7 @@ Use `textRuns` to render mixed formatting within a single shape or text element 
   "fontColor": "FFFFFF",
   "textRuns": [
     { "text": "API Gateway", "bold": true, "fontSize": 11, "charSpacing": 1 },
-    { "text": "v2.1 — Production", "fontSize": 8, "italic": true, "breakLine": true }
+    { "text": "v2.1 — Production", "fontSize": 9, "italic": true, "breakLine": true }
   ]
 }
 ```
@@ -462,9 +460,8 @@ Place icon centered above the shape, shape below, description text below the sha
 ```json
 [
   {
-    "type": "icon", "name": "FaCode", "library": "fa",
-    "x": 5.725, "y": 1.5, "w": 0.35, "h": 0.35,
-    "color": "2E5090"
+    "type": "icon", "path": "assets/icons/lambda_function.png",
+    "x": 5.725, "y": 1.5, "w": 0.35, "h": 0.35
   },
   {
     "type": "shape", "id": "lambda", "shapeType": "roundedRect",
@@ -473,13 +470,13 @@ Place icon centered above the shape, shape below, description text below the sha
     "lineWidth": 0, "rectRadius": 0.1,
     "label": "Products Lambda", "fontSize": 10, "fontBold": true,
     "charSpacing": 1, "margin": [8, 10, 8, 10],
-    "shadow": { "blur": 4, "offset": 3, "angle": 45, "opacity": 0.35 }
+    "shadow": { "blur": 5, "offset": 4, "angle": 45, "opacity": 0.4 }
   },
   {
     "type": "text",
     "x": 5.0, "y": 2.55, "w": 1.8, "h": 0.4,
     "text": "Product Catalog\nLogic & Management",
-    "fontSize": 7, "fontItalic": true, "fontColor": "64748B", "align": "center"
+    "fontSize": 9, "fontItalic": true, "fontColor": "64748B", "align": "center"
   }
 ]
 ```
@@ -502,9 +499,9 @@ Place icon at left of shape, label at right using textRuns. Good when vertical s
   "margin": [8, 10, 8, 10],
   "textRuns": [
     { "text": "  DynamoDB", "bold": true, "fontSize": 10, "charSpacing": 1 },
-    { "text": "  NoSQL Database", "fontSize": 7, "italic": true, "breakLine": true }
+    { "text": "  NoSQL Database", "fontSize": 9, "italic": true, "breakLine": true }
   ],
-  "shadow": { "blur": 4, "offset": 3, "angle": 45, "opacity": 0.35 }
+  "shadow": { "blur": 5, "offset": 4, "angle": 45, "opacity": 0.4 }
 }
 ```
 
@@ -523,13 +520,13 @@ When no clear icon mapping exists, still add the description text below.
     "lineWidth": 0, "rectRadius": 0.1,
     "label": "API Gateway", "fontSize": 10, "fontBold": true,
     "charSpacing": 1, "margin": [8, 10, 8, 10],
-    "shadow": { "blur": 4, "offset": 3, "angle": 45, "opacity": 0.35 }
+    "shadow": { "blur": 5, "offset": 4, "angle": 45, "opacity": 0.4 }
   },
   {
     "type": "text",
     "x": 3.0, "y": 2.65, "w": 2.0, "h": 0.35,
     "text": "Managed API Endpoint\n& Traffic Management",
-    "fontSize": 7, "fontItalic": true, "fontColor": "64748B", "align": "center"
+    "fontSize": 9, "fontItalic": true, "fontColor": "64748B", "align": "center"
   }
 ]
 ```
@@ -615,8 +612,8 @@ Three components with icons above, description text below, connected by labeled 
   },
   "elements": [
     {
-      "type": "icon", "name": "FaDesktop", "library": "fa",
-      "x": 1.825, "y": 1.4, "w": 0.35, "h": 0.35, "color": "2E5090"
+      "type": "icon", "path": "assets/icons/desktop_computer.png",
+      "x": 1.825, "y": 1.4, "w": 0.35, "h": 0.35
     },
     {
       "type": "shape", "id": "frontend", "shapeType": "roundedRect",
@@ -626,20 +623,20 @@ Three components with icons above, description text below, connected by labeled 
       "charSpacing": 1, "fontBold": true, "margin": [8, 10, 8, 10],
       "textRuns": [
         { "text": "React Frontend", "bold": true, "fontSize": 10, "charSpacing": 1 },
-        { "text": "Client Application", "fontSize": 8, "italic": true, "breakLine": true }
+        { "text": "Client Application", "fontSize": 9, "italic": true, "breakLine": true }
       ],
-      "shadow": { "blur": 4, "offset": 3, "angle": 45, "opacity": 0.35 }
+      "shadow": { "blur": 5, "offset": 4, "angle": 45, "opacity": 0.4 }
     },
     {
       "type": "text",
       "x": 1.0, "y": 2.55, "w": 2.0, "h": 0.4,
       "text": "Single-Page App\nReact 18 + TypeScript",
-      "fontSize": 7, "fontItalic": true, "fontColor": "64748B", "align": "center"
+      "fontSize": 9, "fontItalic": true, "fontColor": "64748B", "align": "center"
     },
 
     {
-      "type": "icon", "name": "FaServer", "library": "fa",
-      "x": 4.825, "y": 1.4, "w": 0.35, "h": 0.35, "color": "2E5090"
+      "type": "icon", "path": "assets/icons/server_rack.png",
+      "x": 4.825, "y": 1.4, "w": 0.35, "h": 0.35
     },
     {
       "type": "shape", "id": "api", "shapeType": "roundedRect",
@@ -649,33 +646,33 @@ Three components with icons above, description text below, connected by labeled 
       "charSpacing": 1, "fontBold": true, "margin": [8, 10, 8, 10],
       "textRuns": [
         { "text": "Node.js API", "bold": true, "fontSize": 10, "charSpacing": 1 },
-        { "text": "REST Service", "fontSize": 8, "italic": true, "breakLine": true }
+        { "text": "REST Service", "fontSize": 9, "italic": true, "breakLine": true }
       ],
-      "shadow": { "blur": 4, "offset": 3, "angle": 45, "opacity": 0.35 }
+      "shadow": { "blur": 5, "offset": 4, "angle": 45, "opacity": 0.4 }
     },
     {
       "type": "text",
       "x": 4.0, "y": 2.55, "w": 2.0, "h": 0.4,
       "text": "Express REST API\nBusiness Logic Layer",
-      "fontSize": 7, "fontItalic": true, "fontColor": "64748B", "align": "center"
+      "fontSize": 9, "fontItalic": true, "fontColor": "64748B", "align": "center"
     },
 
     {
-      "type": "icon", "name": "FaDatabase", "library": "fa",
-      "x": 7.825, "y": 1.4, "w": 0.35, "h": 0.35, "color": "5B8DB8"
+      "type": "icon", "path": "assets/icons/database_cylinder.png",
+      "x": 7.825, "y": 1.4, "w": 0.35, "h": 0.35
     },
     {
       "type": "shape", "id": "db", "shapeType": "cylinder",
       "x": 7.0, "y": 1.8, "w": 2.0, "h": 1.2,
       "label": "PostgreSQL", "fill": "5B8DB8", "fontColor": "FFFFFF",
       "lineWidth": 0, "fontSize": 10,
-      "shadow": { "blur": 2, "offset": 1, "angle": 45, "opacity": 0.2 }
+      "shadow": { "blur": 3, "offset": 2, "angle": 45, "opacity": 0.25 }
     },
     {
       "type": "text",
       "x": 7.0, "y": 3.05, "w": 2.0, "h": 0.4,
       "text": "Relational Database\nPostgreSQL 15",
-      "fontSize": 7, "fontItalic": true, "fontColor": "64748B", "align": "center"
+      "fontSize": 9, "fontItalic": true, "fontColor": "64748B", "align": "center"
     },
 
     {
@@ -877,9 +874,15 @@ Use a 3-tier visual weight system to create depth and emphasis:
 
 | Tier | Role | Fill | Border | Shadow | Font | charSpacing |
 |------|------|------|--------|--------|------|-------------|
-| **Tier 1** (primary) | Key components | Primary color, dark | Borderless | `{ "blur": 4, "offset": 3, "opacity": 0.35 }` | Bold, 10-11pt, white | `1` |
-| **Tier 2** (secondary) | Supporting elements | Secondary color, medium | Thin (1pt) | `{ "blur": 2, "offset": 1, "opacity": 0.2 }` | Regular, 9-10pt | — |
-| **Tier 3** (background) | Context, groups | Light fill | Subtle or borderless | `{ "blur": 6, "offset": 4, "opacity": 0.12 }` | 8-9pt, italic | — |
+| **Tier 1** (primary) | Key components | Primary color, dark | Borderless | `{ "blur": 5, "offset": 4, "opacity": 0.4 }` | Bold, 10-11pt, white | `1` |
+| **Tier 2** (secondary) | Supporting elements | Secondary color, medium | Borderless | `{ "blur": 3, "offset": 2, "opacity": 0.25 }` | Regular, 9-10pt | — |
+| **Tier 3** (background) | Context, groups | Light fill | Subtle or borderless | `{ "blur": 6, "offset": 4, "opacity": 0.12 }` | 9pt, italic | — |
+
+### Depth & Visual Weight Rules
+
+1. **Never combine a visible border AND a shadow on the same shape.** Borders say "flat, contained." Shadows say "elevated, floating." Mixing both creates visual tension. All three tiers use borderless + shadow — no exceptions.
+2. **Shadows imply elevation order.** Higher blur+offset = further from the canvas. Groups (background) get the lightest shadow; primary shapes get the strongest.
+3. **Data-ink ratio:** Every visual element (border, shadow, gradient, icon) must earn its place. If removing an element doesn't reduce clarity, remove it. Decorative borders on Tier 1 shapes add no information — omit them.
 
 ### Depth & Visual Weight Rules
 
@@ -896,7 +899,8 @@ Use a 3-tier visual weight system to create depth and emphasis:
 | Primary shape labels | 10-11 | true | 1 | `FFFFFF` |
 | Secondary shape labels | 9-10 | false | — | `FFFFFF` |
 | Group labels | 9 | true | 1 | `64748B` |
-| Connector labels | 8 | false | — | `6B7280` |
+| Connector labels | 9 | false | — | `6B7280` |
+| Description text | 9 | false | — | `64748B` |
 | Standalone text | 9-11 | varies | — | `1E293B` |
 
 ### Spacing Standards
@@ -947,11 +951,6 @@ Vertical arrow (top to bottom): same `x1 = x2`, `y1 < y2`
 { "x1": 5.0, "y1": 1.5, "x2": 5.0, "y2": 3.0 }
 ```
 
-Diagonal arrow (any direction): different x and y values
-```json
-{ "x1": 2.0, "y1": 1.0, "x2": 5.0, "y2": 3.0 }
-```
-
 Right-to-left arrow: `x1 > x2` (flip handled automatically)
 ```json
 { "x1": 7.0, "y1": 2.0, "x2": 4.0, "y2": 2.0 }
@@ -959,11 +958,13 @@ Right-to-left arrow: `x1 > x2` (flip handled automatically)
 
 **Curved connectors:** pptxgenjs only supports straight lines and elbow (orthogonal L-path) routing — no Bezier curves. If a reference image shows smooth curved arrows, use `"route": "elbow"` as the closest approximation.
 
+**Orthogonal rule:** All connectors should be orthogonal (parallel or perpendicular to slide margins). Never use diagonal connectors. Use `route: "elbow"` for any connection between non-aligned shapes. Use `route: "straight"` only when two shapes share the exact same X or Y coordinate.
+
 ### Connector Semantics
 
 | Style | Meaning | Properties |
 |-------|---------|------------|
-| Solid, 1.5pt | Primary data flow, synchronous call | `lineWidth: 1.5` |
+| Solid, 2.0pt | Primary data flow, synchronous call | `lineWidth: 2.0` |
 | Dashed | Async, event-driven, or secondary flow | `lineDash: "dash"` |
 | Dotted | Optional, monitoring, or out-of-band | `lineDash: "sysDot"` |
 
