@@ -804,6 +804,8 @@ Use a consistent modular scale for all spacing decisions:
 
 **Rule:** Every gap, padding, and margin should map to a scale token. Ad-hoc values like 0.35" or 0.55" break visual rhythm.
 
+**Padding ≤ margin rule:** Internal padding within a shape or group must never exceed the gap between shapes. If group padding is `sm` (0.2"), inter-shape gaps should be `md` (0.4") or larger. Inverting this breaks Gestalt proximity — contained elements would appear more separated than independent ones.
+
 ### Alignment Guidance
 - Align shape centers horizontally or vertically for clean rows/columns
 - For horizontal flows: keep y-coordinates consistent, vary x
@@ -816,6 +818,7 @@ Use a consistent modular scale for all spacing decisions:
 - **Entry point prominence:** The first shape in the flow (user, client, trigger) should be the largest or most visually distinct element — readers scan left-to-right, top-to-bottom.
 - **Gestalt proximity:** Shapes that work together should be closer to each other than to unrelated shapes. Use `md` (0.4") gaps within a functional group and `lg` (0.6") between groups.
 - **Whitespace is structural:** Empty space between groups communicates boundaries as effectively as borders. Don't fill every available inch.
+- **Whitespace budget:** Aim for 15–20% of the diagram area as empty space. If every inch is filled, the diagram feels cramped and the eye has nowhere to rest. Whitespace between groups is as informative as the shapes themselves.
 
 ### Consulting-Quality Color Palettes
 

@@ -105,6 +105,7 @@ This is the core step. You will translate the **structural text description** fr
 - **Data-ink ratio** — every visual element (border, shadow, decoration) must convey information. Apply the removal test: if removing it doesn't reduce clarity, remove it. Don't add borders to Tier 1 shapes that already have dark fills + strong shadows
 - **Spacing scale** — use the modular scale from shape-spec.md: xs(0.1"), sm(0.2"), md(0.4"), lg(0.6"), xl(0.8"). Every gap should map to a token. Ad-hoc values break visual rhythm
 - **Composition** — align the primary flow on the diagram's center axis. Make the entry-point shape the most visually prominent. Use proximity to group related shapes (md gaps within groups, lg gaps between groups)
+- **Grayscale-first** — verify that your tier hierarchy works by mentally converting to grayscale before choosing palette colors. If Tier 1/2/3 shapes aren't distinguishable by fill darkness alone, adjust relative lightness before adding color. Color should add meaning on top of an already-clear hierarchy
 - Use `textRuns` for primary shapes that need title + subtitle formatting (e.g., service name + version or role)
 - Use `text` for standalone labels (lane names, phase headers, annotations)
 - Use `divider` for separator lines
