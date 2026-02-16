@@ -301,8 +301,8 @@ function renderConnectorLabel(slide, el, cx, cy, bgColor) {
   const labelW = el.labelW || Math.max(0.5, Math.min(2.5, el.label.length * 0.08 + 0.2));
   const ox = el.labelOffset || 0;
   const labelOpts = {
-    x: cx - labelW / 2 + ox, y: cy - 0.15, w: labelW, h: 0.25,
-    fontSize: el.labelFontSize || 10,
+    x: cx - labelW / 2 + ox, y: cy - 0.17, w: labelW, h: 0.30,
+    fontSize: el.labelFontSize || 11,
     color: labelColor,
     align: "center", valign: "middle",
     fontFace: el.fontFace || "Calibri",
@@ -315,7 +315,7 @@ function renderConnectorLabel(slide, el, cx, cy, bgColor) {
 }
 
 // Chamfer radius for elbow connector corners (inches)
-const ELBOW_RADIUS = 0.06;
+const ELBOW_RADIUS = 0.10;
 
 function renderElbowSegments(slide, pres, lineOpts, el, segments) {
   // Try to chamfer each bend between consecutive segments.
@@ -577,7 +577,7 @@ function renderGroup(slide, pres, el) {
       y: ly,
       w: labelW,
       h: 0.25,
-      fontSize: el.labelFontSize || 9,
+      fontSize: el.labelFontSize || 10,
       fontFace: el.fontFace || "Calibri",
       color: labelColor,
       bold: el.labelBold || false,
@@ -701,7 +701,7 @@ async function buildSlideFromJson(spec) {
       y: 5.25,
       w: 9.2,
       h: 0.3,
-      fontSize: 9,
+      fontSize: 10,
       fontFace: "Calibri",
       color: "94A3B8",
       align: "center",
@@ -894,7 +894,7 @@ function buildSlide(args) {
       y: 5.25,
       w: 9.2,
       h: 0.3,
-      fontSize: 9,
+      fontSize: 10,
       fontFace: "Calibri",
       color: "94A3B8",
       align: "center",

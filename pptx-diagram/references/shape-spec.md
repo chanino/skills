@@ -181,7 +181,7 @@ Connectors can reference shapes by `id` (recommended) or use absolute coordinate
 | `startArrow` | string | `"none"` | Arrow at start point (see Arrow Types) |
 | `endArrow` | string | `"triangle"` | Arrow at end point |
 | `label` | string | — | Text label at the midpoint (straight) or bend point (elbow) |
-| `labelFontSize` | number | `10` | Label font size |
+| `labelFontSize` | number | `11` | Label font size |
 | `labelBgColor` | hex string | `meta.bgColor` | Background fill behind label text (knockout over connector line) |
 | `labelColor` | hex string | `"666666"` | Label text color |
 | `fontFace` | string | `"Calibri"` | Label font family |
@@ -196,7 +196,7 @@ Connectors can reference shapes by `id` (recommended) or use absolute coordinate
 - `"top"` → `(x + w/2, y)`
 - `"bottom"` → `(x + w/2, y + h)`
 
-**Elbow routing (default):** Renders 3 LINE segments with chamfered corners (0.06" radius). Horizontal-first if `|dx| ≥ |dy|`, vertical-first otherwise. The label is placed at the bend point. Chamfers gracefully degrade to sharp corners if segments are shorter than 2× the radius.
+**Elbow routing (default):** Renders 3 LINE segments with chamfered corners (0.10" radius). Horizontal-first if `|dx| ≥ |dy|`, vertical-first otherwise. The label is placed at the bend point. Chamfers gracefully degrade to sharp corners if segments are shorter than 2× the radius.
 
 **Fallback:** If `from`/`to` are not set or reference unknown IDs, the connector falls back to `x1,y1,x2,y2` absolute coordinates (full backward compatibility).
 
@@ -303,7 +303,7 @@ Background rectangles that visually group other elements. Always place these fir
 | `lineWidth` | number | `1` | Border width |
 | `lineDash` | string | `"solid"` | Border dash style |
 | `label` | string | — | Group label text |
-| `labelFontSize` | number | `10` | Label font size |
+| `labelFontSize` | number | `10` | Label font size (10pt floor) |
 | `labelColor` | hex string | `"64748B"` | Label text color |
 | `labelPosition` | string | `"topLeft"` | Label position: `"topLeft"`, `"topRight"`, `"bottomLeft"`, `"bottomRight"` |
 | `fontFace` | string | `"Calibri"` | Label font family |
@@ -428,7 +428,7 @@ Use `textRuns` to render mixed formatting within a single shape or text element 
   "fontColor": "FFFFFF",
   "textRuns": [
     { "text": "API Gateway", "bold": true, "fontSize": 11, "charSpacing": 1 },
-    { "text": "v2.1 — Production", "fontSize": 9, "italic": true, "breakLine": true }
+    { "text": "v2.1 — Production", "fontSize": 10, "italic": true, "breakLine": true }
   ]
 }
 ```
@@ -499,8 +499,8 @@ Place icon at left of shape, label at right using textRuns. Good when vertical s
   "lineWidth": 0, "rectRadius": 0.1,
   "margin": [8, 10, 8, 10],
   "textRuns": [
-    { "text": "  DynamoDB", "bold": true, "fontSize": 10, "charSpacing": 1 },
-    { "text": "  NoSQL Database", "fontSize": 9, "italic": true, "breakLine": true }
+    { "text": "  DynamoDB", "bold": true, "fontSize": 11, "charSpacing": 1 },
+    { "text": "  NoSQL Database", "fontSize": 10, "italic": true, "breakLine": true }
   ],
   "shadow": { "blur": 5, "offset": 4, "angle": 45, "opacity": 0.4 }
 }
@@ -623,8 +623,8 @@ Three components with icons above, description text below, connected by labeled 
       "lineWidth": 0, "rectRadius": 0.1,
       "charSpacing": 1, "fontBold": true, "margin": [8, 10, 8, 10],
       "textRuns": [
-        { "text": "React Frontend", "bold": true, "fontSize": 10, "charSpacing": 1 },
-        { "text": "Client Application", "fontSize": 9, "italic": true, "breakLine": true }
+        { "text": "React Frontend", "bold": true, "fontSize": 11, "charSpacing": 1 },
+        { "text": "Client Application", "fontSize": 10, "italic": true, "breakLine": true }
       ],
       "shadow": { "blur": 5, "offset": 4, "angle": 45, "opacity": 0.4 }
     },
@@ -646,8 +646,8 @@ Three components with icons above, description text below, connected by labeled 
       "lineWidth": 0, "rectRadius": 0.1,
       "charSpacing": 1, "fontBold": true, "margin": [8, 10, 8, 10],
       "textRuns": [
-        { "text": "Node.js API", "bold": true, "fontSize": 10, "charSpacing": 1 },
-        { "text": "REST Service", "fontSize": 9, "italic": true, "breakLine": true }
+        { "text": "Node.js API", "bold": true, "fontSize": 11, "charSpacing": 1 },
+        { "text": "REST Service", "fontSize": 10, "italic": true, "breakLine": true }
       ],
       "shadow": { "blur": 5, "offset": 4, "angle": 45, "opacity": 0.4 }
     },
@@ -715,17 +715,17 @@ Actors in horizontal lanes with activities across phases. **Key pattern:** Lane 
     { "type": "text", "x": 0.1, "y": 2.45, "w": 1.6, "h": 1.2, "text": "SOC Analyst", "fontSize": 10, "fontBold": true, "fontColor": "334155", "align": "right", "valign": "middle", "charSpacing": 1 },
     { "type": "text", "x": 0.1, "y": 3.75, "w": 1.6, "h": 1.2, "text": "Incident Cmdr", "fontSize": 10, "fontBold": true, "fontColor": "334155", "align": "right", "valign": "middle", "charSpacing": 1 },
 
-    { "type": "text", "x": 3.0, "y": 0.85, "w": 2.0, "h": 0.3, "text": "Detection", "fontSize": 9, "fontBold": true, "fontColor": "64748B", "align": "center", "charSpacing": 1 },
-    { "type": "text", "x": 5.5, "y": 0.85, "w": 2.0, "h": 0.3, "text": "Triage", "fontSize": 9, "fontBold": true, "fontColor": "64748B", "align": "center", "charSpacing": 1 },
-    { "type": "text", "x": 7.8, "y": 0.85, "w": 2.0, "h": 0.3, "text": "Containment", "fontSize": 9, "fontBold": true, "fontColor": "64748B", "align": "center", "charSpacing": 1 },
+    { "type": "text", "x": 3.0, "y": 0.85, "w": 2.0, "h": 0.3, "text": "Detection", "fontSize": 10, "fontBold": true, "fontColor": "64748B", "align": "center", "charSpacing": 1 },
+    { "type": "text", "x": 5.5, "y": 0.85, "w": 2.0, "h": 0.3, "text": "Triage", "fontSize": 10, "fontBold": true, "fontColor": "64748B", "align": "center", "charSpacing": 1 },
+    { "type": "text", "x": 7.8, "y": 0.85, "w": 2.0, "h": 0.3, "text": "Containment", "fontSize": 10, "fontBold": true, "fontColor": "64748B", "align": "center", "charSpacing": 1 },
 
     { "type": "divider", "x1": 4.9, "y1": 0.85, "x2": 4.9, "y2": 4.95, "lineColor": "E2E8F0", "lineDash": "dash" },
     { "type": "divider", "x1": 7.4, "y1": 0.85, "x2": 7.4, "y2": 4.95, "lineColor": "E2E8F0", "lineDash": "dash" },
 
-    { "type": "shape", "id": "detect", "shapeType": "roundedRect", "x": 2.5, "y": 1.5, "w": 1.8, "h": 0.5, "label": "Detect Anomaly", "fill": "334155", "fontColor": "FFFFFF", "fontSize": 9, "lineWidth": 0, "shadow": { "blur": 4, "offset": 3, "opacity": 0.35 } },
-    { "type": "shape", "id": "triage", "shapeType": "roundedRect", "x": 5.5, "y": 2.8, "w": 1.8, "h": 0.5, "label": "Analyze & Triage", "fill": "64748B", "fontColor": "FFFFFF", "fontSize": 9, "lineWidth": 0, "shadow": { "blur": 2, "offset": 1, "opacity": 0.2 } },
-    { "type": "shape", "id": "approve", "shapeType": "diamond", "x": 7.6, "y": 3.85, "w": 1.8, "h": 1.0, "label": "Approve?", "fill": "0EA5E9", "fontColor": "FFFFFF", "fontSize": 9, "lineWidth": 0, "shadow": { "blur": 4, "offset": 3, "opacity": 0.35 } },
-    { "type": "shape", "id": "execute", "shapeType": "roundedRect", "x": 8.0, "y": 1.5, "w": 1.6, "h": 0.5, "label": "Execute", "fill": "334155", "fontColor": "FFFFFF", "fontSize": 9, "lineWidth": 0, "shadow": { "blur": 4, "offset": 3, "opacity": 0.35 } },
+    { "type": "shape", "id": "detect", "shapeType": "roundedRect", "x": 2.5, "y": 1.5, "w": 1.8, "h": 0.5, "label": "Detect Anomaly", "fill": "334155", "fontColor": "FFFFFF", "fontSize": 10, "lineWidth": 0, "shadow": { "blur": 4, "offset": 3, "opacity": 0.35 } },
+    { "type": "shape", "id": "triage", "shapeType": "roundedRect", "x": 5.5, "y": 2.8, "w": 1.8, "h": 0.5, "label": "Analyze & Triage", "fill": "64748B", "fontColor": "FFFFFF", "fontSize": 10, "lineWidth": 0, "shadow": { "blur": 2, "offset": 1, "opacity": 0.2 } },
+    { "type": "shape", "id": "approve", "shapeType": "diamond", "x": 7.6, "y": 3.85, "w": 1.8, "h": 1.0, "label": "Approve?", "fill": "0EA5E9", "fontColor": "FFFFFF", "fontSize": 10, "lineWidth": 0, "shadow": { "blur": 4, "offset": 3, "opacity": 0.35 } },
+    { "type": "shape", "id": "execute", "shapeType": "roundedRect", "x": 8.0, "y": 1.5, "w": 1.6, "h": 0.5, "label": "Execute", "fill": "334155", "fontColor": "FFFFFF", "fontSize": 10, "lineWidth": 0, "shadow": { "blur": 4, "offset": 3, "opacity": 0.35 } },
 
     { "type": "connector", "from": "detect", "fromSide": "right", "to": "triage", "toSide": "left", "endArrow": "triangle", "lineColor": "94A3B8", "route": "elbow" },
     { "type": "connector", "from": "triage", "fromSide": "right", "to": "approve", "toSide": "top", "endArrow": "triangle", "lineColor": "94A3B8", "route": "elbow" },
@@ -736,6 +736,8 @@ Actors in horizontal lanes with activities across phases. **Key pattern:** Lane 
 
 ### Example 3: Flowchart with Decisions
 
+Uses `id` on every shape and `from`/`to` anchoring on every connector — the recommended modern pattern. Note: `route` is omitted (defaults to elbow). The vertical connectors between aligned shapes produce clean straight segments via the elbow algorithm.
+
 ```json
 {
   "meta": {
@@ -745,41 +747,40 @@ Actors in horizontal lanes with activities across phases. **Key pattern:** Lane 
   },
   "elements": [
     {
-      "type": "shape", "shapeType": "flowTerminator",
+      "type": "shape", "id": "start", "shapeType": "flowTerminator",
       "x": 4.0, "y": 1.0, "w": 2.0, "h": 0.6,
-      "label": "Start", "fill": "2E5090", "fontColor": "FFFFFF",
+      "label": "Start", "fill": "2E5090", "fontColor": "FFFFFF", "fontSize": 11,
       "lineWidth": 0, "shadow": { "blur": 4, "offset": 3, "opacity": 0.35 }
     },
     {
-      "type": "shape", "shapeType": "roundedRect",
+      "type": "shape", "id": "creds", "shapeType": "roundedRect",
       "x": 4.0, "y": 2.0, "w": 2.0, "h": 0.6,
-      "label": "Enter Credentials", "fill": "5B8DB8", "fontColor": "FFFFFF",
+      "label": "Enter Credentials", "fill": "5B8DB8", "fontColor": "FFFFFF", "fontSize": 10,
       "lineWidth": 0, "shadow": { "blur": 2, "offset": 1, "opacity": 0.2 }
     },
     {
-      "type": "shape", "shapeType": "diamond",
+      "type": "shape", "id": "valid", "shapeType": "diamond",
       "x": 4.0, "y": 3.0, "w": 2.0, "h": 1.0,
-      "label": "Valid?", "fill": "C4A35A", "fontColor": "FFFFFF",
+      "label": "Valid?", "fill": "C4A35A", "fontColor": "FFFFFF", "fontSize": 11,
       "lineWidth": 0, "shadow": { "blur": 4, "offset": 3, "opacity": 0.35 }
     },
     {
-      "type": "shape", "shapeType": "roundedRect",
+      "type": "shape", "id": "error", "shapeType": "roundedRect",
       "x": 7.0, "y": 3.2, "w": 2.0, "h": 0.6,
-      "label": "Show Error", "fill": "7C3A2D", "fontColor": "FFFFFF",
+      "label": "Show Error", "fill": "7C3A2D", "fontColor": "FFFFFF", "fontSize": 10,
       "lineWidth": 0, "shadow": { "blur": 2, "offset": 1, "opacity": 0.2 }
     },
     {
-      "type": "shape", "shapeType": "flowTerminator",
+      "type": "shape", "id": "dashboard", "shapeType": "flowTerminator",
       "x": 4.0, "y": 4.5, "w": 2.0, "h": 0.6,
-      "label": "Dashboard", "fill": "2E5090", "fontColor": "FFFFFF",
+      "label": "Dashboard", "fill": "2E5090", "fontColor": "FFFFFF", "fontSize": 11,
       "lineWidth": 0, "shadow": { "blur": 4, "offset": 3, "opacity": 0.35 }
     },
-    { "type": "connector", "x1": 5.0, "y1": 1.6, "x2": 5.0, "y2": 2.0, "endArrow": "triangle", "lineColor": "6B7280" },
-    { "type": "connector", "x1": 5.0, "y1": 2.6, "x2": 5.0, "y2": 3.0, "endArrow": "triangle", "lineColor": "6B7280" },
-    { "type": "connector", "x1": 6.0, "y1": 3.5, "x2": 7.0, "y2": 3.5, "endArrow": "triangle", "label": "No", "labelColor": "7C3A2D", "lineColor": "6B7280" },
-    { "type": "connector", "x1": 5.0, "y1": 4.0, "x2": 5.0, "y2": 4.5, "endArrow": "triangle", "label": "Yes", "labelColor": "2E5090", "lineColor": "6B7280" },
-    { "type": "connector", "x1": 8.0, "y1": 3.2, "x2": 8.0, "y2": 2.3, "endArrow": "triangle", "lineDash": "dash", "lineColor": "6B7280" },
-    { "type": "connector", "x1": 8.0, "y1": 2.3, "x2": 6.0, "y2": 2.3, "endArrow": "triangle", "lineDash": "dash", "label": "Retry", "lineColor": "6B7280" }
+    { "type": "connector", "from": "start", "fromSide": "bottom", "to": "creds", "toSide": "top", "endArrow": "triangle", "lineColor": "6B7280" },
+    { "type": "connector", "from": "creds", "fromSide": "bottom", "to": "valid", "toSide": "top", "endArrow": "triangle", "lineColor": "6B7280" },
+    { "type": "connector", "from": "valid", "fromSide": "right", "to": "error", "toSide": "left", "endArrow": "triangle", "label": "No", "labelColor": "7C3A2D", "lineColor": "6B7280" },
+    { "type": "connector", "from": "valid", "fromSide": "bottom", "to": "dashboard", "toSide": "top", "endArrow": "triangle", "label": "Yes", "labelColor": "2E5090", "lineColor": "6B7280" },
+    { "type": "connector", "from": "error", "fromSide": "top", "to": "creds", "toSide": "right", "endArrow": "triangle", "lineDash": "dash", "label": "Retry", "lineColor": "6B7280" }
   ]
 }
 ```
@@ -876,9 +877,9 @@ Use a 3-tier visual weight system to create depth and emphasis:
 
 | Tier | Role | Fill | Border | Shadow | Font | charSpacing |
 |------|------|------|--------|--------|------|-------------|
-| **Tier 1** (primary) | Key components | Primary color, dark | Borderless | `{ "blur": 5, "offset": 4, "opacity": 0.4 }` | Bold, 10-11pt, white | `1` |
-| **Tier 2** (secondary) | Supporting elements | Secondary color, medium | Borderless | `{ "blur": 3, "offset": 2, "opacity": 0.25 }` | Regular, 9-10pt | — |
-| **Tier 3** (background) | Context, groups | Light fill | Subtle or borderless | `{ "blur": 6, "offset": 4, "opacity": 0.12 }` | 9pt, italic | — |
+| **Tier 1** (primary) | Key components | Primary color, dark | Borderless | `{ "blur": 5, "offset": 4, "opacity": 0.4 }` | Bold, 11-12pt, white | `1` |
+| **Tier 2** (secondary) | Supporting elements | Secondary color, medium | Borderless | `{ "blur": 3, "offset": 2, "opacity": 0.25 }` | Regular, 10-11pt | — |
+| **Tier 3** (background) | Context, groups | Light fill | Subtle or borderless | `{ "blur": 6, "offset": 4, "opacity": 0.12 }` | 10pt, italic | — |
 
 ### Depth & Visual Weight Rules
 
@@ -892,12 +893,14 @@ Use a 3-tier visual weight system to create depth and emphasis:
 |---------|----------|----------|-------------|-----------|
 | Slide title | 20 | true | 1.5 | `1E293B` |
 | Slide subtitle | 12 | false | — | `64748B` |
-| Primary shape labels | 10-11 | true | 1 | `FFFFFF` |
-| Secondary shape labels | 9-10 | false | — | `FFFFFF` |
-| Group labels | 9 | true | 1 | `64748B` |
-| Connector labels | 10 | false | — | `6B7280` |
+| Primary shape labels | 11-12 | true | 1 | `FFFFFF` |
+| Secondary shape labels | 10-11 | false | — | `FFFFFF` |
+| Group labels | 10 | true | 1 | `64748B` |
+| Connector labels | 11 | false | — | `6B7280` |
 | Description text | 10 | false | — | `64748B` |
-| Standalone text | 9-11 | varies | — | `1E293B` |
+| Standalone text | 10-11 | varies | — | `1E293B` |
+
+**Absolute floor: 10pt.** No text element in any diagram should be smaller than 10pt. The code defaults enforce this (connector labels default 11pt, group labels default 10pt, footer default 10pt).
 
 ### Spacing Standards
 
@@ -954,7 +957,29 @@ Right-to-left arrow: `x1 > x2` (flip handled automatically)
 
 **Curved connectors:** pptxgenjs only supports straight lines and elbow (orthogonal L-path) routing — no Bezier curves. If a reference image shows smooth curved arrows, use `"route": "elbow"` as the closest approximation.
 
-**Orthogonal rule:** All connectors should be orthogonal (parallel or perpendicular to slide margins). Never use diagonal connectors. Use `route: "elbow"` for any connection between non-aligned shapes. Use `route: "straight"` only when two shapes share the exact same X or Y coordinate.
+**Orthogonal rule:** All connectors should be orthogonal (parallel or perpendicular to slide margins). Never use diagonal connectors. Omit `route` entirely to get elbow routing by default.
+
+### Routing Decision Tree
+
+Before writing any connector, follow this decision tree:
+
+1. **Do the two shapes share the exact same X coordinate?** (vertical alignment)
+   - Yes → You may optionally add `route: "straight"`, but omitting `route` also works fine (elbow produces a clean vertical line for axis-aligned shapes)
+2. **Do the two shapes share the exact same Y coordinate?** (horizontal alignment)
+   - Yes → Same as above — `route: "straight"` is optional, omitting works fine
+3. **Neither axis is aligned?**
+   - **Omit `route` entirely.** The code defaults to elbow routing with chamfered corners. Never write `route: "straight"` for non-aligned shapes — it produces diagonal lines.
+
+**Rule of thumb:** When in doubt, don't set `route`. The elbow default handles all cases correctly.
+
+### Connector Crossing Avoidance
+
+When multiple connectors must cross:
+
+1. **Minimize crossings first** — rearrange shape positions to reduce the number of crossings. A cleaner layout is always better than visual tricks
+2. **Differentiate crossing connectors** — use different `lineDash` values: `"solid"` for primary flow, `"dash"` for secondary, `"sysDot"` for tertiary
+3. **Offset labels at crossings** — use `labelOffset` with opposite signs on nearby connectors (e.g., `+0.3` and `-0.3`) to separate labels visually
+4. **Increase line width on primary flow** — `lineWidth: 2.5` for the main path, `lineWidth: 1.5` for secondary paths, so the eye follows the primary path naturally
 
 ### Connector Semantics
 

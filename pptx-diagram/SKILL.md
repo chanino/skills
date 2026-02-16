@@ -144,7 +144,7 @@ This is the core step. You will translate the **structural text description** fr
 - Use `shape` for all boxes, ovals, diamonds, cylinders, etc.
 - **Assign `id` to every shape that will have connectors.** Use `from`/`to` connector anchoring with `fromSide`/`toSide` instead of manual coordinate calculation — this is the single most effective way to eliminate visual errors
 - Use `connector` for arrows between shapes. Prefer shape-anchored mode (`from`/`to`) over absolute coordinates (`x1,y1,x2,y2`)
-- Connectors default to `route: "elbow"` (orthogonal L-shaped paths with chamfered corners). Use `route: "straight"` only when two shapes share the exact same X or Y coordinate
+- Connectors default to `route: "elbow"` (orthogonal L-shaped paths with chamfered corners). **CRITICAL: Never use `route: "straight"` unless shapes share the EXACT same X or Y. When in doubt, omit `route` entirely — the code defaults to elbow.**
 - **Select a consulting palette** from shape-spec.md (Corporate Blue, Warm Professional, Modern Slate, or Forest Green). Use max 3 fill colors. Distribute all 3 colors across shapes. Assign Accent to at least 2 shapes per diagram. **Never use bright saturated primaries** (`3B82F6`, `EF4444`, `10B981`, `F59E0B`)
 - **Apply visual weight hierarchy** — use the 3-tier shadow/border system from shape-spec.md: Tier 1 (primary: dark fill, borderless, strong shadow), Tier 2 (secondary: medium fill, borderless, moderate shadow), Tier 3 (backgrounds: light fill, soft shadow). Never combine borders and shadows on the same element
 - **Typography polish** — add `charSpacing: 1` on primary shape labels, `charSpacing: 1.5` on title via `meta.titleCharSpacing`, use `margin: [8,10,8,10]` for breathing room inside shapes
@@ -167,7 +167,8 @@ This is the core step. You will translate the **structural text description** fr
 - Cylinder: min `h` = 1.0"
 - Architecture diagram shapes: min `w` = 1.8", recommended 2.0"+ to accommodate icon + label
 - Leave 0.05" gap between icon and shape top, 0.05" gap between shape bottom and description text
-- Minimum font size: 9pt absolute floor; 10pt default for connector labels and description text
+- **Typography hierarchy:** Primary shape labels 11-12pt bold, connector labels 11pt, description text 10pt, group labels 10pt. Absolute floor: 10pt — no 9pt text anywhere
+- Minimum font size: 10pt absolute floor for all text elements
 - Always rely on default `fit: "shrink"` as safety net
 
 **Component stack pattern** (architecture diagrams):
@@ -192,13 +193,23 @@ This pattern makes diagrams instantly scannable — users recognize components b
 4. Create separate `text` elements for phase headers ABOVE the diagram area
 
 **Connector routing strategy:**
-- Default: `route: "elbow"` — all connectors should be orthogonal (parallel or perpendicular to slide margins)
+- **Omit the `route` property entirely** — the code defaults to elbow routing with chamfered corners. This is correct for 95%+ of connectors
 - Never use diagonal connectors. All lines must be parallel or perpendicular to slide margins
-- Horizontal flows: elbow connectors, `fromSide: "right"` → `toSide: "left"` (use `route: "straight"` only when shapes share exact same Y)
-- Vertical flows: elbow connectors, `fromSide: "bottom"` → `toSide: "top"` (use `route: "straight"` only when shapes share exact same X)
-- Cross-lane: use `route: "elbow"`
+- Only add `route: "straight"` when you have **manually verified** that the two shapes share the exact same X coordinate (vertical line) or exact same Y coordinate (horizontal line). If in doubt, don't set `route` at all
+- Horizontal flows: `fromSide: "right"` → `toSide: "left"` (elbow default handles offset Y)
+- Vertical flows: `fromSide: "bottom"` → `toSide: "top"` (elbow default handles offset X)
+- Cross-lane: elbow default
 - Use `labelOffset` to shift labels away from shape overlap
 - Labels auto-fill with `meta.bgColor`. Set `labelBgColor` on connectors over non-white group backgrounds
+
+**Connector crossing avoidance:**
+- Arrange shapes to minimize connector crossings — reposition shapes rather than accepting crossed lines
+- When crossings are unavoidable, differentiate with `lineDash`: solid for primary flow, `"dash"` for secondary
+- Use `labelOffset` with opposite signs on nearby connectors to separate labels (e.g., `+0.3` and `-0.3`)
+
+**Label collision avoidance:**
+- When two connectors run within 0.4" of each other, use opposite `labelOffset` values to prevent label overlap
+- Connector labels have background fills that mask the line underneath — the `h: 0.30` label height covers the line cleanly
 
 ## Step 5: Build the PPTX
 
