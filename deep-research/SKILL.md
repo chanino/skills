@@ -45,8 +45,30 @@ Parse `$ARGUMENTS` to determine the **depth mode** and **research query**:
 
 3. Generate a topic slug from the query (lowercase, hyphens, max 50 chars) for the output directory.
 4. Set the output directory: `~/Documents/research/[topic-slug]_[YYYYMMDD]/`
+5. **Detect available search tools** — determine the search method for this session:
+   a. Check if WebSearch and WebFetch tools are available to you. If yes → set search mode to `web-native`
+   b. If NOT available, run this Bash command to check for Brave Search:
+      `python3 ~/skills/deep-research/brave_search.py search "test" 2>&1 | head -5`
+      If it returns JSON results → set search mode to `brave-api`
+   c. If neither → tell the user no search capability is available and STOP.
 
-Tell the user the depth mode, thread count, and that research is beginning.
+Tell the user the depth mode, thread count, search mode, and that research is beginning.
+
+### Search Tool Reference (brave-api mode)
+
+When search mode is `brave-api`, subagents use these Bash commands instead of WebSearch/WebFetch:
+
+**Search** (replaces WebSearch):
+```
+python3 ~/skills/deep-research/brave_search.py search "your query here"
+```
+Returns JSON array of results with title, url, description, age.
+
+**Fetch** (replaces WebFetch):
+```
+python3 ~/skills/deep-research/brave_search.py fetch "https://example.com"
+```
+Returns cleaned text content from the URL (first ~15k chars).
 
 ---
 
@@ -95,6 +117,16 @@ Spawn **all N threads simultaneously** using the `Task` tool in a **single messa
 ```
 You are a research assistant performing a SURVEY pass for one thread of a larger research project. Your goal is breadth, not depth — map the landscape.
 
+**Search mode**: [web-native OR brave-api]
+
+If search mode is `web-native`:
+  - Use WebSearch for queries and WebFetch for page content
+
+If search mode is `brave-api`:
+  - Use Bash to run: python3 ~/skills/deep-research/brave_search.py search "query"
+  - Use Bash to run: python3 ~/skills/deep-research/brave_search.py fetch "url"
+  - Parse the JSON output from search, text output from fetch
+
 **Your research thread**: [Thread title and focus area]
 
 **Research question context**: [The user's original query for context]
@@ -102,8 +134,8 @@ You are a research assistant performing a SURVEY pass for one thread of a larger
 **Search queries to try**: [2-3 specific queries from Phase 1]
 
 **Instructions**:
-1. Use WebSearch to execute the provided search queries (1-2 searches — don't go exhaustive)
-2. For the most promising results (up to 2-3), use WebFetch to get fuller content
+1. Use WebSearch (web-native) or the brave_search.py script (brave-api) to execute the provided search queries (1-2 searches — don't go exhaustive)
+2. For the most promising results (up to 2-3), use WebFetch (web-native) or brave_search.py fetch (brave-api) to get fuller content
 3. Prioritize breadth: identify key players, main sources, terminology, and landscape
 4. Identify the most authoritative sources (especially T1/T2):
    - T1: .gov, .mil, peer-reviewed journals, official standards
@@ -165,6 +197,16 @@ Each subagent receives a prompt structured as:
 ```
 You are a research assistant performing a TARGETED DEEP DIVE for a specific research gap.
 
+**Search mode**: [web-native OR brave-api]
+
+If search mode is `web-native`:
+  - Use WebSearch for queries and WebFetch for page content
+
+If search mode is `brave-api`:
+  - Use Bash to run: python3 ~/skills/deep-research/brave_search.py search "query"
+  - Use Bash to run: python3 ~/skills/deep-research/brave_search.py fetch "url"
+  - Parse the JSON output from search, text output from fetch
+
 **Gap to fill**: [Specific description of what's missing or needs resolution]
 
 **What we already know**: [Key findings from Survey relevant to this gap]
@@ -174,8 +216,8 @@ You are a research assistant performing a TARGETED DEEP DIVE for a specific rese
 **Research question context**: [The user's original query]
 
 **Instructions**:
-1. Use WebSearch with specific, targeted queries to fill the identified gap
-2. Use WebFetch on promising results and any specific URLs from leads
+1. Use WebSearch (web-native) or the brave_search.py script (brave-api) with specific, targeted queries to fill the identified gap
+2. Use WebFetch (web-native) or brave_search.py fetch (brave-api) on promising results and any specific URLs from leads
 3. Prioritize primary/authoritative sources over secondary reporting
 4. If resolving a conflict, find the most authoritative source that others cite
 5. Extract specific facts, data points, quotes, and evidence
@@ -287,7 +329,7 @@ Run all checks against the draft:
 
 *Source quality:*
 - [ ] Per-finding coverage — each finding section cites 3+ sources
-- [ ] No fabricated URLs — every URL came from WebSearch/WebFetch
+- [ ] No fabricated URLs — every URL came from an actual search result or page fetch
 
 ### Step 3: Remediate
 
@@ -318,14 +360,23 @@ Tell user: "Draft QA: fixed X issues, Y remain." (Keep this brief.)
 
 ## Phase 6: Publish
 
-1. Create the output directory:
+1. Generate the topic slug from the research query:
+   - Lowercase, replace spaces and special chars with hyphens, max 50 chars
+   - Examples:
+     "FedRAMP authorization process 2025" → fedramp-authorization-process-2025
+     "AI regulation across US EU China" → ai-regulation-us-eu-china
+     "Kubernetes vs serverless for enterprise" → kubernetes-vs-serverless-enterprise
+
+2. Create the output directory using the slug and today's date (YYYYMMDD):
    ```
    mkdir -p ~/Documents/research/[topic-slug]_[YYYYMMDD]/
    ```
+   CRITICAL: Do NOT use generic names like "research-report" or "output".
+   The directory MUST reflect the specific research topic.
 
-2. Write `report.md` and `sources.md` to disk using the Write tool
+3. Write `report.md` and `sources.md` to disk using the Write tool
 
-3. **Display to the user:**
+4. **Display to the user:**
    - The full executive summary
    - Source count and tier distribution (e.g., "15 sources: 4 T1, 3 T2, 5 T3, 2 T4, 1 T5")
    - File paths to both report.md and sources.md
@@ -348,7 +399,7 @@ Tell user: "Draft QA: fixed X issues, Y remain." (Keep this brief.)
 
 ## Constraints
 
-- **Never fabricate URLs or citations.** Every URL must come from an actual WebSearch or WebFetch result. If you cannot find a source for a claim, mark it `[citation needed]` or remove the claim.
+- **Never fabricate URLs or citations.** Every URL must come from an actual search result (WebSearch, Brave Search API, or page fetch). If you cannot find a source for a claim, mark it `[citation needed]` or remove the claim.
 - **Never invent source metadata.** Titles, authors, dates must come from actual source content. Use "not listed" / "not available" / "accessed [date]" when metadata is missing.
 - **Domain-neutral source selection.** Do not prefer .gov or .edu sources by default — let the topic determine which sources are relevant. Rank by credibility tier, not domain type. A T3 journalism source with direct reporting may be more valuable than a T1 government page with generic information.
 - **Present conflicting evidence.** When sources disagree, show both positions with citations. Offer analysis of why they might differ, but do not silently pick a side.
