@@ -18,6 +18,36 @@ Work through each phase sequentially. Do not skip phases. Use AskUserQuestion fo
 
 ---
 
+## Setup (first-time installation)
+
+If the user is setting up on a new system, they need these files in `~/claude/prompt-dsl/`:
+
+```bash
+# Create the working directory
+mkdir -p ~/claude/prompt-dsl/tools
+
+# Copy the runner and tools from the skill's scripts directory
+# (skill installed at ~/.claude/skills/prompt-runner/)
+cp ~/.claude/skills/prompt-runner/scripts/run_claude.py ~/claude/prompt-dsl/
+cp ~/.claude/skills/prompt-runner/scripts/tools/md_to_docx.py ~/claude/prompt-dsl/tools/
+cp ~/.claude/skills/prompt-runner/scripts/tools/xlsx_to_text.py ~/claude/prompt-dsl/tools/
+
+# Install Python dependencies
+pip install openpyxl python-docx
+```
+
+After setup the working directory should look like:
+```
+~/claude/prompt-dsl/
+├── run_claude.py          # DSL runner (required)
+├── tools/
+│   ├── md_to_docx.py     # Word doc output (required for --docx)
+│   └── xlsx_to_text.py   # XLSX inspection utility
+└── examples/             # (optional) example .prompt files
+```
+
+---
+
 ## Phase 1: Interview — Gather Requirements
 
 Ask these questions progressively using AskUserQuestion. Adapt follow-ups based on answers.
