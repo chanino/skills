@@ -12,13 +12,59 @@ user_invocable: true
 
 # PPTX Diagram Skill
 
-You are creating a technical diagram as a polished single-slide PPTX with **native editable shapes**. The output contains real PowerPoint shapes (rectangles, diamonds, arrows, text boxes) that the user can click, move, resize, and edit directly in PowerPoint. Optionally, diagrams can include **rasterized icons** (server, database, cloud, etc.) for visual reinforcement. Follow these 5 steps in order.
+You are creating a technical diagram as a polished single-slide PPTX with **native editable shapes**. The output contains real PowerPoint shapes (rectangles, diamonds, arrows, text boxes) that the user can click, move, resize, and edit directly in PowerPoint. Optionally, diagrams can include **rasterized icons** (server, database, cloud, etc.) for visual reinforcement. Follow these 6 steps in order.
 
-## Step 1: Craft the Image Generation Prompt
+## Slug & Artifact Directory
+
+Every run is identified by a **slug** — a 2-4 word kebab-case name (max 40 chars, e.g. `three-tier-arch`). All artifacts for that run are saved to `diagrams/{slug}/` under the working directory. This keeps outputs organized and visible to the user.
+
+## Progress Tracking
+
+At the start of every run, create a task list with these 6 tasks (use `TaskCreate`). Mark each `in_progress` before starting and `completed` when done. Set sequential `blockedBy` dependencies so each task blocks the next.
+
+| # | Subject | activeForm |
+|---|---------|------------|
+| 1 | Gather requirements and generate slug | Gathering diagram requirements |
+| 2 | Generate image prompt | Generating image prompt |
+| 3 | Generate reference image | Generating reference image |
+| 4 | Generate JSON spec from reference | Generating JSON shape spec |
+| 5 | Build PPTX from JSON spec | Building PPTX slide |
+| 6 | QA and iterate on output | Running QA checks |
+
+## Step 1: Gather Requirements
+
+### 1a. Get high-level description
+
+Ask the user about:
+- **Diagram type** (architecture, flowchart, network, sequence, ER, data flow, CONOPS, etc.)
+- **Components** — what elements should appear
+- **Purpose** — what story the diagram tells
+- **Preferences** — color scheme, style, specific layout requests
+
+### 1b. Develop detailed solution
+
+Based on the user's input, develop a detailed plan:
+- Overall layout approach (horizontal flow, layered, hub-and-spoke, swim lanes, etc.)
+- Component groupings and visual hierarchy
+- Which icons to use (check `references/icon-catalog.md`)
+- Palette selection (Corporate Blue, Warm Professional, Modern Slate, or Forest Green)
+
+### 1c. Generate slug and create artifact directory
+
+Generate a 2-4 word kebab-case slug (max 40 chars) that describes the diagram. Examples: `three-tier-arch`, `cicd-pipeline`, `incident-response-conops`.
+
+**Slug collision check:** If `diagrams/{slug}/` already exists, append a differentiator (e.g., `three-tier-arch-v2`).
+
+Create the artifact directory:
+```bash
+mkdir -p diagrams/{slug}
+```
+
+## Step 2: Craft the Image Generation Prompt
 
 Read the prompt engineering guide at `references/diagram-prompts.md` for patterns and tips.
 
-Based on the user's request, build a detailed prompt that specifies:
+Based on the requirements from Step 1, build a detailed prompt that specifies:
 - Diagram type (architecture, flowchart, network, sequence, ER, data flow, CONOPS, etc.)
 - All components and their relationships
 - Clean, consulting-grade design style with muted, desaturated colors
@@ -28,7 +74,14 @@ Based on the user's request, build a detailed prompt that specifies:
 - Component count kept reasonable (5-10 major elements)
 - "No watermarks, no stock photo artifacts"
 
-## Step 1b: Icons (Pre-generated Library + Custom Generation)
+**Save the prompt for review:**
+```bash
+# Write the prompt to diagrams/{slug}/prompt.md
+```
+
+Show the user the saved prompt and wait for approval before proceeding to Step 3. The user may request revisions.
+
+## Step 2b: Icons (Pre-generated Library + Custom Generation)
 
 A library of 25 pre-generated icons is available in `assets/icons/` — these cover 90%+ of technical diagram needs (servers, databases, clouds, security, people, status indicators, etc.). See `references/icon-catalog.md` for the full catalog.
 
@@ -42,13 +95,13 @@ A library of 25 pre-generated icons is available in `assets/icons/` — these co
 
 ```bash
 # Single custom icon
-python3 scripts/generate_icon.py "API gateway" --color "dark navy blue" -o /tmp/icons/api_gateway.png
+python3 scripts/generate_icon.py "API gateway" --color "dark navy blue" -o diagrams/{slug}/icons/api_gateway.png
 
 # Batch of custom icons
 python3 scripts/generate_icon.py \
   --batch "API gateway,data lake,IoT sensor,message queue" \
   --color "dark navy blue" \
-  --output-dir /tmp/icons/
+  --output-dir diagrams/{slug}/icons/
 ```
 
 | Flag | Default | Description |
@@ -68,22 +121,22 @@ python3 scripts/generate_icon.py \
 
 **QA check:** After generation, view the PNGs to verify icons are recognizable and visually consistent. Regenerate individual failures with adjusted prompts (use `--no-cache` to bypass the cache).
 
-**Using custom icons in the diagram:** In Step 3's output JSON, use `path`:
+**Using custom icons in the diagram:** In Step 4's output JSON, use `path`:
 ```json
-{ "type": "icon", "path": "/tmp/icons/api_gateway.png", "x": 2.5, "y": 1.5, "w": 0.35, "h": 0.35 }
+{ "type": "icon", "path": "diagrams/{slug}/icons/api_gateway.png", "x": 2.5, "y": 1.5, "w": 0.35, "h": 0.35 }
 ```
 
 Pre-generated and custom icons can be mixed freely in the same diagram.
 
-## Step 2: Generate the Reference Image
+## Step 3: Generate the Reference Image
 
 **IMPORTANT — File naming:** Always use a `-ref` suffix for reference images to prevent `soffice --convert-to png` from overwriting them. When soffice converts `foo.pptx` it outputs `foo.png` — if your reference image is also named `foo.png`, it gets clobbered.
 
 ```bash
-python3 ../gemini-image/scripts/generate_image.py "YOUR DETAILED PROMPT HERE" -o /tmp/diagram-ref.png
+python3 scripts/generate_image.py "YOUR DETAILED PROMPT HERE" -o diagrams/{slug}/{slug}-ref.png
 ```
 
-**QA check:** After generation, view the image file (`/tmp/diagram-ref.png`) to verify:
+**QA check:** After generation, view the image file (`diagrams/{slug}/{slug}-ref.png`) to verify:
 - All requested components are present
 - Text labels are readable
 - Layout is clean and not cramped
@@ -91,16 +144,16 @@ python3 ../gemini-image/scripts/generate_image.py "YOUR DETAILED PROMPT HERE" -o
 
 If the image quality is poor or missing elements, refine the prompt and regenerate. You may need 2-3 iterations to get a good result.
 
-This image is a **visual layout reference** — it will not be embedded in the final PPTX. It guides the automated JSON spec generation in Step 3.
+This image is a **visual layout reference** — it will not be embedded in the final PPTX. It guides the automated JSON spec generation in Step 4.
 
-## Step 3: Generate JSON Shape Specification
+## Step 4: Generate JSON Shape Specification
 
 Use `image_to_spec.py` (Gemini vision) to automatically convert the reference image into a complete JSON shape specification. This single call replaces the manual describe-then-write workflow — Gemini analyzes the image and outputs build-ready JSON with all shape positions, colors, connectors, icons, alt text, and description.
 
 ```bash
 python3 scripts/image_to_spec.py \
-  -i /tmp/diagram-ref.png \
-  -o /tmp/diagram-spec.json \
+  -i diagrams/{slug}/{slug}-ref.png \
+  -o diagrams/{slug}/{slug}-spec.json \
   --title "Three-Tier Architecture" \
   --palette "Corporate Blue"
 ```
@@ -143,14 +196,14 @@ If the report shows warnings, review and fix the JSON before building. Common fi
 
 **If the automated spec quality is poor**, fall back to the manual workflow in Appendix A.
 
-## Step 4: Build the PPTX
+## Step 5: Build the PPTX
 
 Run the build script with the `--json` flag to generate native shapes:
 
 ```bash
 node scripts/build_slide.js \
-  --json /tmp/diagram-spec.json \
-  --output output.pptx
+  --json diagrams/{slug}/{slug}-spec.json \
+  --output diagrams/{slug}/{slug}.pptx
 ```
 
 ### Optional flags
@@ -167,23 +220,25 @@ The old `--image` mode still works for embedding a flat PNG:
 
 ```bash
 node scripts/build_slide.js \
-  --image /tmp/diagram-ref.png \
+  --image diagrams/{slug}/{slug}-ref.png \
   --title "DIAGRAM TITLE" \
   --alt-text "ALT TEXT" \
-  --output output.pptx
+  --output diagrams/{slug}/{slug}.pptx
 ```
 
-## Step 5: QA and Iteration
+## Step 6: QA and Iteration
 
 After building the PPTX, verify the output visually and fix any issues.
 
-### 5a. Convert PPTX to PNG
+### 6a. Convert PPTX to PNG
 
 ```bash
-soffice --headless --convert-to png --outdir /tmp output.pptx
+soffice --headless --convert-to png --outdir diagrams/{slug} diagrams/{slug}/{slug}.pptx
 ```
 
-### 5b. Inspect the rendered PNG
+Note: This outputs `{slug}.png` which overwrites the companion PNG from `build_slide.js`. This is fine — the `-ref.png` original is preserved, and the QA render is what we want.
+
+### 6b. Inspect the rendered PNG
 
 View the converted PNG and run through the QA checklist (`references/qa-checklist.md`):
 
@@ -194,7 +249,7 @@ View the converted PNG and run through the QA checklist (`references/qa-checklis
 5. **Icons** — missing, invisible, or wrong size
 6. **Connectors** — arrows not connecting to shape edges, labels overlapping shapes
 7. **Color contrast** — text unreadable against its background
-8. **Reference match** — rendered layout structurally matches the reference image from Step 2
+8. **Reference match** — rendered layout structurally matches the reference image from Step 3
 9. **Shadow consistency** — if shadows are used, are they applied uniformly?
 10. **Connector anchoring** — do connectors visually connect to shape edges?
 11. **Font consistency** — is the same fontFace used throughout?
@@ -209,25 +264,28 @@ View the converted PNG and run through the QA checklist (`references/qa-checklis
 20. **Data-ink ratio** — no redundant borders, shadows, or decorations
 21. **Spacing scale** — all gaps match xs/sm/md/lg/xl tokens (0.1/0.2/0.4/0.6/0.8")
 
-### 5c. Fix and rebuild
+### 6c. Fix and rebuild
 
 If issues are found: fix the JSON spec → rebuild the PPTX → re-convert to PNG → re-inspect.
 
 **Maximum 2 fix cycles.** Most issues are spacing or alignment problems that are quick to fix by adjusting coordinates.
 
-### 5d. Report remaining issues
+### 6d. Report remaining issues
 
 If any issues remain after 2 fix cycles, report them to the user as known limitations (e.g., "The connector label between X and Y slightly overlaps — you may want to nudge it in PowerPoint").
 
 ## Output
 
-The build script produces up to 3 files:
+All artifacts are saved to `diagrams/{slug}/`:
 
 | File | Purpose |
 |------|---------|
-| `{name}.pptx` | The PowerPoint slide with native editable shapes |
-| `{name}.png` | Reference image used as layout guide (copied from `meta.referenceImage`) |
-| `{name}.description.md` | Markdown file with title, alt text, description, and generation metadata |
+| `diagrams/{slug}/prompt.md` | Image generation prompt |
+| `diagrams/{slug}/{slug}-ref.png` | Reference image (layout guide) |
+| `diagrams/{slug}/{slug}-spec.json` | JSON shape specification |
+| `diagrams/{slug}/{slug}.pptx` | Final PowerPoint with native editable shapes |
+| `diagrams/{slug}/{slug}.description.md` | Alt text and metadata |
+| `diagrams/{slug}/{slug}.png` | QA render of the PPTX |
 
 Tell the user the output file paths and briefly describe the diagram that was generated. Emphasize that all shapes are **native and editable** — they can click, move, resize, and edit any element directly in PowerPoint.
 
@@ -244,15 +302,15 @@ Use `image_to_text.py` (Gemini vision) to extract a detailed structural descript
 **Call 1 — Structural layout description** (the key piece):
 
 ```bash
-python3 ../gemini-image/scripts/image_to_text.py -i /tmp/diagram-ref.png "Describe the structural layout of this technical diagram in precise detail. For every shape: state its type (rectangle, rounded rectangle, diamond, oval, cylinder, cloud), approximate position (left/center/right, top/middle/bottom), approximate size relative to the slide, fill color, border color, and the exact text label inside it. For every arrow or connector: state its start element, end element, direction, line style (solid, dashed), arrowhead style, and any label text. For any background grouping boxes: state their position, size, fill color, border color, and label. For any divider lines: state orientation, position, and style. For standalone text labels: state their content, position, and styling. For any icons or visual symbols: describe their type (server, database, cloud, shield, lambda, bucket, etc.), position relative to their shape, and approximate size. For any description or annotation text below shapes: capture the exact text content. Describe the overall layout grid (how many columns/rows, spacing pattern)."
+python3 scripts/image_to_text.py -i diagrams/{slug}/{slug}-ref.png "Describe the structural layout of this technical diagram in precise detail. For every shape: state its type (rectangle, rounded rectangle, diamond, oval, cylinder, cloud), approximate position (left/center/right, top/middle/bottom), approximate size relative to the slide, fill color, border color, and the exact text label inside it. For every arrow or connector: state its start element, end element, direction, line style (solid, dashed), arrowhead style, and any label text. For any background grouping boxes: state their position, size, fill color, border color, and label. For any divider lines: state orientation, position, and style. For standalone text labels: state their content, position, and styling. For any icons or visual symbols: describe their type (server, database, cloud, shield, lambda, bucket, etc.), position relative to their shape, and approximate size. For any description or annotation text below shapes: capture the exact text content. Describe the overall layout grid (how many columns/rows, spacing pattern)."
 ```
 
-Save the output to `/tmp/diagram-layout.txt`.
+Save the output to `diagrams/{slug}/{slug}-layout.txt`.
 
 **Call 2 — Alt text** (accessibility summary):
 
 ```bash
-python3 ../gemini-image/scripts/image_to_text.py -i /tmp/diagram-ref.png "Describe this technical diagram in 2-3 sentences for screen reader alt text. Focus on the type of diagram, the key components shown, and the main relationships or data flow depicted."
+python3 scripts/image_to_text.py -i diagrams/{slug}/{slug}-ref.png "Describe this technical diagram in 2-3 sentences for screen reader alt text. Focus on the type of diagram, the key components shown, and the main relationships or data flow depicted."
 ```
 
 Review the output and trim to a concise 2-3 sentence alt text summary.
@@ -260,23 +318,23 @@ Review the output and trim to a concise 2-3 sentence alt text summary.
 **Call 3 — Full description** (for `.description.md`):
 
 ```bash
-python3 ../gemini-image/scripts/image_to_text.py -i /tmp/diagram-ref.png "Provide a detailed description of this technical diagram. Describe each component, their relationships, data flows, and the overall purpose of the diagram."
+python3 scripts/image_to_text.py -i diagrams/{slug}/{slug}-ref.png "Provide a detailed description of this technical diagram. Describe each component, their relationships, data flows, and the overall purpose of the diagram."
 ```
 
 ### A2. Create JSON Shape Specification (Manual)
 
 This is the core manual step. You will translate the **structural text description** from A1 into a JSON file that `build_slide.js` renders as native PowerPoint shapes.
 
-1. Read the structural layout description from `/tmp/diagram-layout.txt`
+1. Read the structural layout description from `diagrams/{slug}/{slug}-layout.txt`
 2. Read `references/shape-spec.md` for the full JSON schema, coordinate system, and worked examples
-3. Write a JSON file (`/tmp/diagram-spec.json`) that recreates the diagram as native shapes
+3. Write a JSON file (`diagrams/{slug}/{slug}-spec.json`) that recreates the diagram as native shapes
 
 **Translation process:**
 1. Map each described shape → `shapeType` values (rounded rectangle → `roundedRect`, diamond → `diamond`, etc.)
 2. Convert described positions → inch coordinates on the 10" × 5.625" slide
 3. Map described colors → hex values
 4. Create connectors between described elements
-5. Set `meta.referenceImage` to `/tmp/diagram-ref.png`
+5. Set `meta.referenceImage` to `diagrams/{slug}/{slug}-ref.png`
 6. Set `meta.altText` and `meta.description` from A1 outputs
 
 **Coordinate system:**

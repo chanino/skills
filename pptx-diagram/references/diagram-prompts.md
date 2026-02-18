@@ -385,7 +385,7 @@ Labeled arrows for all data flows. Readable text.
 
 ## JSON Shape Spec Guidelines
 
-After generating the reference image (Step 2) and extracting a structural description via `image_to_text.py` (Step 3), you translate that **text description** into a JSON shape specification (Step 4). See `references/shape-spec.md` for the full schema. Here is guidance on the translation process.
+When using the manual fallback workflow (Appendix A), after generating the reference image (Step 3) and extracting a structural description via `image_to_text.py` (Appendix A1), you translate that **text description** into a JSON shape specification (Appendix A2). See `references/shape-spec.md` for the full schema. Here is guidance on the translation process.
 
 ### Mapping Described Elements to Shape Types
 
@@ -404,7 +404,7 @@ After generating the reference image (Step 2) and extracting a structural descri
 
 ### Translating the Structural Description to Coordinates
 
-The structural description from Step 3 gives you positions (left/center/right, top/middle/bottom), relative sizes, and layout grid info. Map these to inch coordinates:
+The structural description from Appendix A1 gives you positions (left/center/right, top/middle/bottom), relative sizes, and layout grid info. Map these to inch coordinates:
 
 1. **Slide is 10" wide × 5.625" tall** — the title bar uses the top 0.75", so your diagram area is roughly 0.85" to 5.35" vertically
 2. **Map described positions to a grid**: use the grid templates below for common layouts
@@ -456,9 +456,9 @@ When the reference image or user request calls for icons (server icons, database
 
 **In the image generation prompt:** You can request icons on shapes (e.g., "show a server icon on each compute node") to guide the reference layout. The image generator may or may not produce distinct icons, but they serve as placement hints.
 
-**In the structural description (Step 3):** Call out any icons or iconographic elements: "a server icon appears above the 'API Server' label", "a database cylinder icon sits to the left of 'PostgreSQL'". This helps map them to `icon` elements in Step 4.
+**In the structural description (Appendix A1):** Call out any icons or iconographic elements: "a server icon appears above the 'API Server' label", "a database cylinder icon sits to the left of 'PostgreSQL'". This helps map them to `icon` elements in the JSON spec.
 
-**In the JSON spec (Step 4):** Add `icon` elements positioned near their associated shapes. Icons are optional — if you're unsure which icon to use or the description doesn't clearly call for one, skip it. Shapes and labels alone produce clear diagrams.
+**In the JSON spec (Step 4 / Appendix A2):** Add `icon` elements positioned near their associated shapes. Icons are optional — if you're unsure which icon to use or the description doesn't clearly call for one, skip it. Shapes and labels alone produce clear diagrams.
 
 ### Color Strategy for Consulting Quality
 
