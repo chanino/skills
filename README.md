@@ -32,6 +32,26 @@ General-purpose image generation and analysis using Google Gemini. Generate imag
 
 **Dependencies:** `google-genai`, `python-dotenv`, `GEMINI_API_KEY` environment variable
 
+### [prompt-runner](./prompt-runner/)
+
+Interactive workflow for building, validating, and running prompt-dsl `.prompt` files that process data through Claude. Guides users from requirements gathering through `.prompt` file generation, validation, dry-run preview, execution, and result delivery.
+
+**Usage:** `/prompt-runner`
+
+**Triggers:** "prompt runner", "batch process", "process spreadsheet", "process CSV", "process data with Claude", "generate from template", "batch Claude", "prompt pipeline"
+
+**Phases:**
+1. **Interview** — Gather requirements via progressive questions
+2. **Validate** — Pre-flight checks on data files, attachments, dependencies
+3. **Generate** — Build a `.prompt` file from interview answers
+4. **Preview** — Dry-run to verify prompt structure
+5. **Execute** — Run the prompt file through Claude
+6. **Deliver** — Present results and remind about reuse
+
+**Features:** CSV/XLSX/JSON data iteration, per-item output files, static and dynamic attachments, QC validation pipelines, Word `.docx` generation
+
+**Dependencies:** `run_claude.py` (prompt-dsl runner), optionally `openpyxl` (XLSX), `python-docx` (Word output), `pdftotext` (PDF attachments)
+
 ### [pptx-diagram](./pptx-diagram/)
 
 Creates technical diagram slides as PPTX files with native editable PowerPoint shapes. Generates a reference image via Gemini, extracts a structural description via Gemini vision, translates it into a JSON shape spec, and builds the PPTX with real shapes (rectangles, diamonds, arrows, connectors) that you can click, move, resize, and edit directly in PowerPoint.
@@ -52,6 +72,7 @@ Copy (or symlink) a skill directory into `~/.claude/skills/`:
 # Example: install skills
 cp -r deep-research ~/.claude/skills/deep-research
 cp -r gemini-image ~/.claude/skills/gemini-image
+cp -r prompt-runner ~/.claude/skills/prompt-runner
 cp -r pptx-diagram ~/.claude/skills/pptx-diagram
 ```
 
