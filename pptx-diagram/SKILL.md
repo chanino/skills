@@ -31,6 +31,8 @@ At the start of every run, create a task list with these 6 tasks (use `TaskCreat
 | 5 | Build PPTX from JSON spec | Building PPTX slide |
 | 6 | QA and iterate on output | Running QA checks |
 
+> **If the user provides an existing image (Path B):** Mark Tasks 2 and 3 as completed immediately and proceed from Task 4.
+
 ## Step 1: Gather Requirements
 
 ### 1a. Get high-level description
@@ -40,6 +42,7 @@ Ask the user about:
 - **Components** — what elements should appear
 - **Purpose** — what story the diagram tells
 - **Preferences** — color scheme, style, specific layout requests
+- **Starting point** — do they have an existing reference image, or do they need one generated from a prompt?
 
 ### 1b. Develop detailed solution
 
@@ -62,11 +65,21 @@ mkdir -p diagrams/{slug}
 
 ## Step 2: Craft the Image Generation Prompt
 
+**Path A — Generate from prompt:**
+
 The user provides the image generation prompt. Use it **exactly as given** — do NOT rewrite, reorganize, paraphrase, or append to it. Save it verbatim to `diagrams/{slug}/prompt.md`.
 
 If the user has not provided a prompt, ask them for one. Do not generate one yourself.
 
 Show the user the saved prompt and wait for approval before proceeding to Step 3. The user may request revisions.
+
+**Path B — Use existing image:**
+
+The user provides a path to an existing image. Copy it to `diagrams/{slug}/{slug}-ref.png`:
+```bash
+cp /path/to/user-image.png diagrams/{slug}/{slug}-ref.png
+```
+Show the image to the user and confirm it is the correct reference. Mark Steps 2 and 3 as completed and proceed directly to Step 4.
 
 ## Step 2b: Icons (Pre-generated Library + Custom Generation)
 
@@ -116,6 +129,8 @@ python3 scripts/generate_icon.py \
 Pre-generated and custom icons can be mixed freely in the same diagram.
 
 ## Step 3: Generate the Reference Image
+
+> **Path B skip:** If the user provided an existing image in Step 2, skip this step — the reference image is already at `diagrams/{slug}/{slug}-ref.png`.
 
 **IMPORTANT — File naming:** Always use a `-ref` suffix for reference images to prevent `soffice --convert-to png` from overwriting them. When soffice converts `foo.pptx` it outputs `foo.png` — if your reference image is also named `foo.png`, it gets clobbered.
 
