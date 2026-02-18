@@ -62,22 +62,9 @@ mkdir -p diagrams/{slug}
 
 ## Step 2: Craft the Image Generation Prompt
 
-Read the prompt engineering guide at `references/diagram-prompts.md` for patterns and tips.
+The user provides the image generation prompt. Use it **exactly as given** — do NOT rewrite, reorganize, paraphrase, or append to it. Save it verbatim to `diagrams/{slug}/prompt.md`.
 
-Based on the requirements from Step 1, build a detailed prompt that specifies:
-- Diagram type (architecture, flowchart, network, sequence, ER, data flow, CONOPS, etc.)
-- All components and their relationships
-- Clean, consulting-grade design style with muted, desaturated colors
-- White background, 16:9 aspect ratio
-- Readable text labels on all elements
-- Limited color palette (2-3 colors)
-- Component count kept reasonable (5-10 major elements)
-- "No watermarks, no stock photo artifacts"
-
-**Save the prompt for review:**
-```bash
-# Write the prompt to diagrams/{slug}/prompt.md
-```
+If the user has not provided a prompt, ask them for one. Do not generate one yourself.
 
 Show the user the saved prompt and wait for approval before proceeding to Step 3. The user may request revisions.
 
