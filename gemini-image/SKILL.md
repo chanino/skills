@@ -1,4 +1,6 @@
 ---
+name: gemini-image
+user_invocable: true
 triggers:
   - "generate image"
   - "create image"
@@ -60,7 +62,7 @@ Example: `"A modern cloud architecture diagram showing three availability zones 
 Run the generation script:
 
 ```bash
-python3 scripts/generate_image.py "<prompt>" -o <output_path> --aspect <ratio> --size <size>
+python3 ~/.claude/skills/gemini-image/scripts/generate_image.py "<prompt>" -o <output_path> --aspect <ratio> --size <size>
 ```
 
 **Parameters:**
@@ -73,7 +75,7 @@ python3 scripts/generate_image.py "<prompt>" -o <output_path> --aspect <ratio> -
 
 The prompt can also be piped via stdin:
 ```bash
-echo "A red apple on white background" | python3 scripts/generate_image.py -o apple.png
+echo "A red apple on white background" | python3 ~/.claude/skills/gemini-image/scripts/generate_image.py -o apple.png
 ```
 
 ### Step 5: QA the Output
@@ -119,7 +121,7 @@ If no template fits, craft a custom prompt that:
 ### Step 3: Run the Analysis
 
 ```bash
-python3 scripts/image_to_text.py -i <image_path> "<prompt>" -o <output_path>
+python3 ~/.claude/skills/gemini-image/scripts/image_to_text.py -i <image_path> "<prompt>" -o <output_path>
 ```
 
 **Parameters:**
@@ -131,7 +133,7 @@ python3 scripts/image_to_text.py -i <image_path> "<prompt>" -o <output_path>
 
 Pipe from stdin:
 ```bash
-cat photo.png | python3 scripts/image_to_text.py "Describe this image"
+cat photo.png | python3 ~/.claude/skills/gemini-image/scripts/image_to_text.py "Describe this image"
 ```
 
 ### Step 4: Review and Refine

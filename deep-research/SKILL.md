@@ -48,7 +48,7 @@ Parse `$ARGUMENTS` to determine the **depth mode** and **research query**:
 5. **Detect available search tools** — determine the search method for this session:
    a. Check if WebSearch and WebFetch tools are available to you. If yes → set search mode to `web-native`
    b. If NOT available, run this Bash command to check for Brave Search:
-      `python3 ~/skills/deep-research/brave_search.py search "test" 2>&1 | head -5`
+      `python3 ~/.claude/skills/deep-research/brave_search.py search "test" 2>&1 | head -5`
       If it returns JSON results → set search mode to `brave-api`
    c. If neither → tell the user no search capability is available and STOP.
 
@@ -60,13 +60,13 @@ When search mode is `brave-api`, subagents use these Bash commands instead of We
 
 **Search** (replaces WebSearch):
 ```
-python3 ~/skills/deep-research/brave_search.py search "your query here"
+python3 ~/.claude/skills/deep-research/brave_search.py search "your query here"
 ```
 Returns JSON array of results with title, url, description, age.
 
 **Fetch** (replaces WebFetch):
 ```
-python3 ~/skills/deep-research/brave_search.py fetch "https://example.com"
+python3 ~/.claude/skills/deep-research/brave_search.py fetch "https://example.com"
 ```
 Returns cleaned text content from the URL (first ~15k chars).
 
@@ -123,8 +123,8 @@ If search mode is `web-native`:
   - Use WebSearch for queries and WebFetch for page content
 
 If search mode is `brave-api`:
-  - Use Bash to run: python3 ~/skills/deep-research/brave_search.py search "query"
-  - Use Bash to run: python3 ~/skills/deep-research/brave_search.py fetch "url"
+  - Use Bash to run: python3 ~/.claude/skills/deep-research/brave_search.py search "query"
+  - Use Bash to run: python3 ~/.claude/skills/deep-research/brave_search.py fetch "url"
   - Parse the JSON output from search, text output from fetch
 
 **Your research thread**: [Thread title and focus area]
@@ -203,8 +203,8 @@ If search mode is `web-native`:
   - Use WebSearch for queries and WebFetch for page content
 
 If search mode is `brave-api`:
-  - Use Bash to run: python3 ~/skills/deep-research/brave_search.py search "query"
-  - Use Bash to run: python3 ~/skills/deep-research/brave_search.py fetch "url"
+  - Use Bash to run: python3 ~/.claude/skills/deep-research/brave_search.py search "query"
+  - Use Bash to run: python3 ~/.claude/skills/deep-research/brave_search.py fetch "url"
   - Parse the JSON output from search, text output from fetch
 
 **Gap to fill**: [Specific description of what's missing or needs resolution]

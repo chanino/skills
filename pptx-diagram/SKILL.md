@@ -95,10 +95,10 @@ A library of 25 pre-generated icons is available in `assets/icons/` — these co
 
 ```bash
 # Single custom icon
-python3 scripts/generate_icon.py "API gateway" --color "dark navy blue" -o diagrams/{slug}/icons/api_gateway.png
+python3 ~/.claude/skills/pptx-diagram/scripts/generate_icon.py "API gateway" --color "dark navy blue" -o diagrams/{slug}/icons/api_gateway.png
 
 # Batch of custom icons
-python3 scripts/generate_icon.py \
+python3 ~/.claude/skills/pptx-diagram/scripts/generate_icon.py \
   --batch "API gateway,data lake,IoT sensor,message queue" \
   --color "dark navy blue" \
   --output-dir diagrams/{slug}/icons/
@@ -135,7 +135,7 @@ Pre-generated and custom icons can be mixed freely in the same diagram.
 **IMPORTANT — File naming:** Always use a `-ref` suffix for reference images to prevent `soffice --convert-to png` from overwriting them. When soffice converts `foo.pptx` it outputs `foo.png` — if your reference image is also named `foo.png`, it gets clobbered.
 
 ```bash
-python3 scripts/generate_image.py "YOUR DETAILED PROMPT HERE" -o diagrams/{slug}/{slug}-ref.png
+python3 ~/.claude/skills/pptx-diagram/scripts/generate_image.py "YOUR DETAILED PROMPT HERE" -o diagrams/{slug}/{slug}-ref.png
 ```
 
 **QA check:** After generation, view the image file (`diagrams/{slug}/{slug}-ref.png`) to verify:
@@ -153,7 +153,7 @@ This image is a **visual layout reference** — it will not be embedded in the f
 Use `image_to_spec.py` (Gemini vision) to automatically convert the reference image into a complete JSON shape specification. This single call replaces the manual describe-then-write workflow — Gemini analyzes the image and outputs build-ready JSON with all shape positions, colors, connectors, icons, alt text, and description.
 
 ```bash
-python3 scripts/image_to_spec.py \
+python3 ~/.claude/skills/pptx-diagram/scripts/image_to_spec.py \
   -i diagrams/{slug}/{slug}-ref.png \
   -o diagrams/{slug}/{slug}-spec.json \
   --title "Three-Tier Architecture" \
@@ -203,7 +203,7 @@ If the report shows warnings, review and fix the JSON before building. Common fi
 Run the build script with the `--json` flag to generate native shapes:
 
 ```bash
-node scripts/build_slide.js \
+node ~/.claude/skills/pptx-diagram/scripts/build_slide.js \
   --json diagrams/{slug}/{slug}-spec.json \
   --output diagrams/{slug}/{slug}.pptx
 ```
@@ -221,7 +221,7 @@ All other metadata (title, subtitle, colors, footer, alt text, description) come
 The old `--image` mode still works for embedding a flat PNG:
 
 ```bash
-node scripts/build_slide.js \
+node ~/.claude/skills/pptx-diagram/scripts/build_slide.js \
   --image diagrams/{slug}/{slug}-ref.png \
   --title "DIAGRAM TITLE" \
   --alt-text "ALT TEXT" \
@@ -304,7 +304,7 @@ Use `image_to_text.py` (Gemini vision) to extract a detailed structural descript
 **Call 1 — Structural layout description** (the key piece):
 
 ```bash
-python3 scripts/image_to_text.py -i diagrams/{slug}/{slug}-ref.png "Describe the structural layout of this technical diagram in precise detail. For every shape: state its type (rectangle, rounded rectangle, diamond, oval, cylinder, cloud), approximate position (left/center/right, top/middle/bottom), approximate size relative to the slide, fill color, border color, and the exact text label inside it. For every arrow or connector: state its start element, end element, direction, line style (solid, dashed), arrowhead style, and any label text. For any background grouping boxes: state their position, size, fill color, border color, and label. For any divider lines: state orientation, position, and style. For standalone text labels: state their content, position, and styling. For any icons or visual symbols: describe their type (server, database, cloud, shield, lambda, bucket, etc.), position relative to their shape, and approximate size. For any description or annotation text below shapes: capture the exact text content. Describe the overall layout grid (how many columns/rows, spacing pattern)."
+python3 ~/.claude/skills/pptx-diagram/scripts/image_to_text.py -i diagrams/{slug}/{slug}-ref.png "Describe the structural layout of this technical diagram in precise detail. For every shape: state its type (rectangle, rounded rectangle, diamond, oval, cylinder, cloud), approximate position (left/center/right, top/middle/bottom), approximate size relative to the slide, fill color, border color, and the exact text label inside it. For every arrow or connector: state its start element, end element, direction, line style (solid, dashed), arrowhead style, and any label text. For any background grouping boxes: state their position, size, fill color, border color, and label. For any divider lines: state orientation, position, and style. For standalone text labels: state their content, position, and styling. For any icons or visual symbols: describe their type (server, database, cloud, shield, lambda, bucket, etc.), position relative to their shape, and approximate size. For any description or annotation text below shapes: capture the exact text content. Describe the overall layout grid (how many columns/rows, spacing pattern)."
 ```
 
 Save the output to `diagrams/{slug}/{slug}-layout.txt`.
@@ -312,7 +312,7 @@ Save the output to `diagrams/{slug}/{slug}-layout.txt`.
 **Call 2 — Alt text** (accessibility summary):
 
 ```bash
-python3 scripts/image_to_text.py -i diagrams/{slug}/{slug}-ref.png "Describe this technical diagram in 2-3 sentences for screen reader alt text. Focus on the type of diagram, the key components shown, and the main relationships or data flow depicted."
+python3 ~/.claude/skills/pptx-diagram/scripts/image_to_text.py -i diagrams/{slug}/{slug}-ref.png "Describe this technical diagram in 2-3 sentences for screen reader alt text. Focus on the type of diagram, the key components shown, and the main relationships or data flow depicted."
 ```
 
 Review the output and trim to a concise 2-3 sentence alt text summary.
@@ -320,7 +320,7 @@ Review the output and trim to a concise 2-3 sentence alt text summary.
 **Call 3 — Full description** (for `.description.md`):
 
 ```bash
-python3 scripts/image_to_text.py -i diagrams/{slug}/{slug}-ref.png "Provide a detailed description of this technical diagram. Describe each component, their relationships, data flows, and the overall purpose of the diagram."
+python3 ~/.claude/skills/pptx-diagram/scripts/image_to_text.py -i diagrams/{slug}/{slug}-ref.png "Provide a detailed description of this technical diagram. Describe each component, their relationships, data flows, and the overall purpose of the diagram."
 ```
 
 ### A2. Create JSON Shape Specification (Manual)
