@@ -477,5 +477,5 @@ After running `comment.py` (see Step 2), add markers to document.xml. For replie
 
 - **pandoc**: Text extraction
 - **docx**: `npm install -g docx` (new documents)
-- **Microsoft Word** (macOS, via AppleScript): PDF conversion, .doc-to-.docx conversion, tracked change acceptance (`scripts/office/msoffice.py`)
+- **Microsoft Word** (macOS via AppleScript, Windows via pywin32): PDF conversion, .doc-to-.docx conversion, tracked change acceptance (`scripts/office/msoffice.py`, `scripts/accept_changes.py`)
 - **Poppler**: `pdftoppm` for images

@@ -228,5 +228,5 @@ pdftoppm -jpeg -r 150 -f N -l N output.pdf slide-fixed
 - `pip install "markitdown[pptx]"` - text extraction
 - `pip install Pillow` - thumbnail grids
 - `npm install -g pptxgenjs` - creating from scratch
-- Microsoft PowerPoint (macOS, via AppleScript) - PDF conversion (`scripts/office/msoffice.py`)
+- Microsoft PowerPoint (macOS via AppleScript, Windows via pywin32) - PDF conversion (`scripts/office/msoffice.py`)
 - Poppler (`pdftoppm`) - PDF to images

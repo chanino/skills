@@ -71,7 +71,7 @@ A user may ask you to create, edit, or analyze the contents of an .xlsx file. Yo
 
 ## Important Requirements
 
-**Microsoft Excel Required for Formula Recalculation**: The `scripts/recalc.py` script uses Microsoft Excel (macOS, via AppleScript) to recalculate formula values. Excel must be installed.
+**Microsoft Excel Required for Formula Recalculation**: The `scripts/recalc.py` script uses Microsoft Excel (macOS via AppleScript, Windows via pywin32) to recalculate formula values. Excel must be installed.
 
 ## Reading and analyzing data
 
@@ -221,7 +221,7 @@ The script:
 - Recalculates all formulas in all sheets via Microsoft Excel
 - Scans ALL cells for Excel errors (#REF!, #DIV/0!, etc.)
 - Returns JSON with detailed error locations and counts
-- Works on both Linux and macOS
+- Works on macOS and Windows
 
 ## Formula Verification Checklist
 

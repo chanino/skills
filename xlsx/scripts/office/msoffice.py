@@ -1,6 +1,7 @@
 """
-Helper for converting files using native Microsoft Office apps on macOS
-via AppleScript. Replaces the LibreOffice (soffice) shim for local use.
+Helper for converting files using native Microsoft Office apps.
+macOS: AppleScript via osascript
+Windows: COM automation via pywin32
 
 Usage:
     from office.msoffice import convert_to_pdf
@@ -12,18 +13,17 @@ import subprocess
 import sys
 from pathlib import Path
 
+IS_WINDOWS = sys.platform == "win32"
+IS_MACOS = sys.platform == "darwin"
 
-def convert_to_pdf(input_path: str, output_dir: str) -> Path:
-    """Convert an XLSX file to PDF using Microsoft Excel via AppleScript."""
-    input_path = Path(input_path).resolve()
-    output_dir = Path(output_dir).resolve()
+if IS_WINDOWS:
+    try:
+        import win32com.client
+    except ImportError:
+        win32com = None
 
-    if not input_path.exists():
-        raise FileNotFoundError(f"Input file not found: {input_path}")
 
-    output_dir.mkdir(parents=True, exist_ok=True)
-    pdf_path = output_dir / f"{input_path.stem}.pdf"
-
+def _convert_to_pdf_macos(input_path: Path, pdf_path: Path) -> None:
     script = f'''
     tell application "Microsoft Excel"
         open POSIX file "{input_path}"
@@ -44,6 +44,44 @@ def convert_to_pdf(input_path: str, output_dir: str) -> Path:
         raise RuntimeError(
             f"Excel PDF conversion failed: {result.stderr.strip()}"
         )
+
+
+def _convert_to_pdf_win32(input_path: Path, pdf_path: Path) -> None:
+    if win32com is None:
+        raise RuntimeError(
+            "pywin32 is required for Office automation on Windows. "
+            "Install it with: pip install pywin32"
+        )
+
+    app = win32com.client.Dispatch("Excel.Application")
+    app.Visible = False
+    app.DisplayAlerts = False
+    workbook = None
+    try:
+        workbook = app.Workbooks.Open(str(input_path))
+        workbook.ExportAsFixedFormat(0, str(pdf_path))  # xlTypePDF = 0
+    finally:
+        if workbook is not None:
+            workbook.Close(SaveChanges=False)
+
+
+def convert_to_pdf(input_path: str, output_dir: str) -> Path:
+    """Convert an XLSX file to PDF using Microsoft Excel."""
+    input_path = Path(input_path).resolve()
+    output_dir = Path(output_dir).resolve()
+
+    if not input_path.exists():
+        raise FileNotFoundError(f"Input file not found: {input_path}")
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    pdf_path = output_dir / f"{input_path.stem}.pdf"
+
+    if IS_WINDOWS:
+        _convert_to_pdf_win32(input_path, pdf_path)
+    elif IS_MACOS:
+        _convert_to_pdf_macos(input_path, pdf_path)
+    else:
+        raise RuntimeError(f"Unsupported platform: {sys.platform}")
 
     if not pdf_path.exists():
         raise RuntimeError(f"PDF not created at {pdf_path}")

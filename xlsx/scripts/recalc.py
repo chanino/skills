@@ -1,6 +1,8 @@
 """
 Excel Formula Recalculation Script
-Recalculates all formulas in an Excel file using Microsoft Excel via AppleScript.
+Recalculates all formulas in an Excel file using Microsoft Excel.
+macOS: AppleScript via osascript
+Windows: COM automation via pywin32
 """
 
 import json
@@ -8,15 +10,19 @@ import subprocess
 import sys
 from pathlib import Path
 
+IS_WINDOWS = sys.platform == "win32"
+IS_MACOS = sys.platform == "darwin"
+
+if IS_WINDOWS:
+    try:
+        import win32com.client
+    except ImportError:
+        win32com = None
+
 from openpyxl import load_workbook
 
 
-def recalc(filename, timeout=30):
-    if not Path(filename).exists():
-        return {"error": f"File {filename} does not exist"}
-
-    abs_path = str(Path(filename).resolve())
-
+def _recalc_macos(abs_path: str, timeout: int) -> dict | None:
     script = f'''
     tell application "Microsoft Excel"
         open POSIX file "{abs_path}"
@@ -39,6 +45,51 @@ def recalc(filename, timeout=30):
 
     if result.returncode != 0:
         return {"error": f"Excel recalculation failed: {result.stderr.strip()}"}
+
+    return None
+
+
+def _recalc_win32(abs_path: str) -> dict | None:
+    if win32com is None:
+        return {
+            "error": (
+                "pywin32 is required for Office automation on Windows. "
+                "Install it with: pip install pywin32"
+            )
+        }
+
+    app = win32com.client.Dispatch("Excel.Application")
+    app.Visible = False
+    app.DisplayAlerts = False
+    workbook = None
+    try:
+        workbook = app.Workbooks.Open(abs_path)
+        app.Calculate()
+        workbook.Save()
+    except Exception as e:
+        return {"error": f"Excel recalculation failed: {e}"}
+    finally:
+        if workbook is not None:
+            workbook.Close(SaveChanges=False)
+
+    return None
+
+
+def recalc(filename, timeout=30):
+    if not Path(filename).exists():
+        return {"error": f"File {filename} does not exist"}
+
+    abs_path = str(Path(filename).resolve())
+
+    if IS_WINDOWS:
+        error = _recalc_win32(abs_path)
+    elif IS_MACOS:
+        error = _recalc_macos(abs_path, timeout)
+    else:
+        return {"error": f"Unsupported platform: {sys.platform}"}
+
+    if error is not None:
+        return error
 
     try:
         wb = load_workbook(filename, data_only=True)

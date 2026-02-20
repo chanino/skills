@@ -1,12 +1,73 @@
-"""Accept all tracked changes in a DOCX file using Microsoft Word via AppleScript.
+"""Accept all tracked changes in a DOCX file using Microsoft Word.
 
-Requires Microsoft Word (macOS).
+macOS: AppleScript via osascript
+Windows: COM automation via pywin32
 """
 
 import argparse
 import shutil
 import subprocess
+import sys
 from pathlib import Path
+
+IS_WINDOWS = sys.platform == "win32"
+IS_MACOS = sys.platform == "darwin"
+
+if IS_WINDOWS:
+    try:
+        import win32com.client
+    except ImportError:
+        win32com = None
+
+
+def _accept_changes_macos(abs_output: str) -> tuple[None, str | None]:
+    script = f'''
+    tell application "Microsoft Word"
+        open POSIX file "{abs_output}"
+        set theDocument to active document
+        accept all revisions theDocument
+        save theDocument
+        close theDocument
+    end tell
+    '''
+
+    try:
+        result = subprocess.run(
+            ["osascript", "-e", script],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except subprocess.TimeoutExpired:
+        return None, "Error: Word timed out accepting changes"
+
+    if result.returncode != 0:
+        return None, f"Error: Word failed: {result.stderr.strip()}"
+
+    return None, None
+
+
+def _accept_changes_win32(abs_output: str) -> tuple[None, str | None]:
+    if win32com is None:
+        return None, (
+            "Error: pywin32 is required for Office automation on Windows. "
+            "Install it with: pip install pywin32"
+        )
+
+    app = win32com.client.Dispatch("Word.Application")
+    app.Visible = False
+    doc = None
+    try:
+        doc = app.Documents.Open(abs_output)
+        doc.Revisions.AcceptAll()
+        doc.Save()
+    except Exception as e:
+        return None, f"Error: Word failed: {e}"
+    finally:
+        if doc is not None:
+            doc.Close(SaveChanges=False)
+
+    return None, None
 
 
 def accept_changes(
@@ -30,31 +91,15 @@ def accept_changes(
 
     abs_output = str(output_path.resolve())
 
-    script = f'''
-    tell application "Microsoft Word"
-        open POSIX file "{abs_output}"
-        set theDocument to active document
-        accept all revisions theDocument
-        save theDocument
-        close theDocument
-    end tell
-    '''
+    if IS_WINDOWS:
+        _, error = _accept_changes_win32(abs_output)
+    elif IS_MACOS:
+        _, error = _accept_changes_macos(abs_output)
+    else:
+        return None, f"Error: Unsupported platform: {sys.platform}"
 
-    try:
-        result = subprocess.run(
-            ["osascript", "-e", script],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-    except subprocess.TimeoutExpired:
-        return (
-            None,
-            f"Error: Word timed out accepting changes: {input_file}",
-        )
-
-    if result.returncode != 0:
-        return None, f"Error: Word failed: {result.stderr.strip()}"
+    if error is not None:
+        return None, f"{error}: {input_file}"
 
     return (
         None,
