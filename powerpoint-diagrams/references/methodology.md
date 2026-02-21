@@ -246,6 +246,44 @@ One font family per diagram set. Default: **Calibri**.
 
 ---
 
+## 5.6. Icon Usage
+
+Icons add semantic recognition by leveraging existing mental models (a database cylinder icon is recognized faster than reading "Database"). They are optional and complement — not replace — the shape grammar.
+
+### When to Use Icons
+
+| Diagram Type | Icons? | Reason |
+|-------------|--------|--------|
+| Architecture / deployment | Yes | Components map to well-known technologies with recognizable icons |
+| System context (C4 L1) | Selective | External systems benefit; internal boxes may not need icons |
+| Hub-and-spoke / radial | Yes | Spokes often represent distinct services with known icons |
+| Flowchart / process | No | Steps are abstract actions; shape presets carry enough semantics |
+| Org chart | No | People and roles don't have standard iconography that adds value |
+| Decision tree | No | Decision/gate semantics are well-served by shape presets alone |
+
+### Placement Rules
+
+- **Position**: Centered horizontally in the upper portion of the shape, above the text label
+- **Size**: 0.35" square (320040 EMU) for standard-sized shapes (1.5" × 0.875")
+- **Text adjustment**: Anchor text to bottom (`anchor="b"`), increase `tIns` to push text below icon
+- **Scale rule**: Icon height ≈ 40% of shape height. For larger shapes (hub, 2.0" × 1.0"), use 0.45". For smaller shapes (0.85x secondary), use 0.28".
+
+### Style Consistency
+
+- **One icon set per diagram**: All from the same Iconify prefix (e.g., all `mdi:*` or all `tabler:*`)
+- **Monochrome white preferred** on dark-fill shapes — matches existing white text convention
+- **Exception**: Vendor logos (AWS, Azure, GCP) should retain official colors, but only if ALL shapes in that category use vendor logos. Don't mix monochrome `mdi:database` with colored `logos:aws-rds`.
+
+### Do / Don't
+
+- **Do**: Use icons when they add instant recognition (cloud, database, security, message queue)
+- **Do**: Keep icon count ≤ 8 per slide — beyond that, icons become noise
+- **Don't**: Add icons to every shape — reserve for shapes where the icon adds recognition beyond the label
+- **Don't**: Use icons smaller than 0.25" — they become unreadable at presentation scale
+- **Don't**: Mix icon sets (Material Design + Font Awesome + custom) in one diagram
+
+---
+
 ## 6. Progressive Disclosure
 
 ### When to Split Slides

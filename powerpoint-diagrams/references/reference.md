@@ -724,3 +724,482 @@ spTree.append(etree.fromstring(xml))
 ```
 
 **How it works**: For each corner waypoint, the preceding straight segment is shortened by `radius`, an `arcTo` draws a quarter-circle, then the next segment starts `radius` past the corner. The radius is automatically clamped when segments are shorter than `2 * radius`.
+
+---
+
+## Legend / Key
+
+When a diagram uses 3+ semantic colors or 2+ line styles, add a legend so viewers can decode the visual grammar without guessing. The `make_legend_xml()` helper renders a compact legend box with color swatches and optional line-style entries.
+
+### Layout
+
+```
+┌─ Legend ──────────────┐
+│ ■ Interface           │  ← 0.18" × 0.18" mini roundRect swatch + 9pt label
+│ ■ Data Store          │
+│ ■ Search              │
+│ ── Primary Flow       │  ← 0.4" mini line + 9pt label
+│ ╌╌ Optional/Async     │
+└───────────────────────┘
+```
+
+- **Width**: ~1.8" (configurable via `legend_w`)
+- **Row height**: 0.28" per entry
+- **Title**: 10pt bold, `#2C3E50`
+- **Labels**: 9pt regular, `#2C3E50`
+- **Background**: white at 85% opacity, 1pt `#B0B0B0` border, small corner radius
+- **Default position**: bottom-right with 0.15" margin from slide edges
+
+### Helper Function: `make_legend_xml()`
+
+```python
+def make_legend_xml(
+    sid,                      # shape ID counter start
+    color_entries,            # list of (label, fill_hex)
+    line_entries=None,        # list of (label, color_hex, is_dashed)
+    x=None, y=None,           # position (defaults to bottom-right)
+    slide_w=9144000,          # for default positioning
+    slide_h=5143500,
+    legend_w=1645920,         # ~1.8"
+):
+    """Build a legend box with color swatches and optional line-style entries.
+
+    Returns:
+        (xml_list, next_sid) — list of XML strings to append to spTree,
+        and the next available shape ID.
+    """
+    line_entries = line_entries or []
+    n_color = len(color_entries)
+    n_line = len(line_entries)
+    n_total = n_color + n_line
+
+    # Sizing constants (EMU)
+    row_h = 256032          # ~0.28"
+    title_h = 274320        # ~0.30"
+    pad_top = 45720         # 0.05"
+    pad_bottom = 68580      # 0.075"
+    legend_h = pad_top + title_h + n_total * row_h + pad_bottom
+
+    margin = 137160         # 0.15" from slide edges
+    if x is None:
+        x = slide_w - legend_w - margin
+    if y is None:
+        y = slide_h - legend_h - margin
+
+    swatch_size = 164592    # ~0.18"
+    swatch_left = 91440     # 0.1" from legend left edge
+    label_left = swatch_left + swatch_size + 68580  # swatch + 0.075" gap
+    label_w = legend_w - label_left - 45720
+
+    line_sample_w = 365760  # 0.4"
+    line_sample_left = swatch_left
+
+    xmls = []
+
+    # --- Container box: semi-transparent white with gray border ---
+    container_xml = f'''<p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:nvSpPr>
+    <p:cNvPr id="{sid}" name="Legend Box"/>
+    <p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>
+    <p:nvPr/>
+  </p:nvSpPr>
+  <p:spPr>
+    <a:xfrm><a:off x="{x}" y="{y}"/><a:ext cx="{legend_w}" cy="{legend_h}"/></a:xfrm>
+    <a:prstGeom prst="roundRect"><a:avLst><a:gd name="adj" fmla="val 3200"/></a:avLst></a:prstGeom>
+    <a:solidFill><a:srgbClr val="FFFFFF"><a:alpha val="85000"/></a:srgbClr></a:solidFill>
+    <a:ln w="12700"><a:solidFill><a:srgbClr val="B0B0B0"/></a:solidFill><a:round/></a:ln>
+  </p:spPr>
+  <p:txBody>
+    <a:bodyPr wrap="square" anchor="t" lIns="91440" tIns="45720" rIns="91440" bIns="0">
+      <a:normAutofit/>
+    </a:bodyPr>
+    <a:lstStyle/>
+    <a:p><a:pPr algn="l"/>
+      <a:r><a:rPr lang="en-US" sz="1000" b="1" dirty="0">
+        <a:solidFill><a:srgbClr val="2C3E50"/></a:solidFill>
+        <a:latin typeface="Calibri"/>
+      </a:rPr><a:t>Legend</a:t></a:r>
+    </a:p>
+  </p:txBody>
+</p:sp>'''
+    xmls.append(container_xml)
+    sid += 1
+
+    # --- Color swatch entries ---
+    for i, (label, fill_hex) in enumerate(color_entries):
+        ey = y + pad_top + title_h + i * row_h
+        swatch_y = ey + (row_h - swatch_size) // 2
+
+        # Mini filled roundRect swatch
+        swatch_xml = f'''<p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:nvSpPr>
+    <p:cNvPr id="{sid}" name="Legend Swatch {i}"/>
+    <p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>
+    <p:nvPr/>
+  </p:nvSpPr>
+  <p:spPr>
+    <a:xfrm><a:off x="{x + swatch_left}" y="{swatch_y}"/><a:ext cx="{swatch_size}" cy="{swatch_size}"/></a:xfrm>
+    <a:prstGeom prst="roundRect"><a:avLst><a:gd name="adj" fmla="val 10000"/></a:avLst></a:prstGeom>
+    <a:solidFill><a:srgbClr val="{fill_hex}"/></a:solidFill>
+    <a:ln w="6350"><a:solidFill><a:srgbClr val="{fill_hex}"/></a:solidFill><a:round/></a:ln>
+  </p:spPr>
+  <p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="en-US" dirty="0"/></a:p></p:txBody>
+</p:sp>'''
+        xmls.append(swatch_xml)
+        sid += 1
+
+        # Label text
+        label_xml = f'''<p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:nvSpPr>
+    <p:cNvPr id="{sid}" name="Legend Label {i}"/>
+    <p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>
+    <p:nvPr/>
+  </p:nvSpPr>
+  <p:spPr>
+    <a:xfrm><a:off x="{x + label_left}" y="{ey}"/><a:ext cx="{label_w}" cy="{row_h}"/></a:xfrm>
+    <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+    <a:noFill/>
+    <a:ln><a:noFill/></a:ln>
+  </p:spPr>
+  <p:txBody>
+    <a:bodyPr wrap="square" anchor="ctr" lIns="0" tIns="0" rIns="0" bIns="0">
+      <a:normAutofit/>
+    </a:bodyPr>
+    <a:lstStyle/>
+    <a:p><a:pPr algn="l"/>
+      <a:r><a:rPr lang="en-US" sz="900" b="0" dirty="0">
+        <a:solidFill><a:srgbClr val="2C3E50"/></a:solidFill>
+        <a:latin typeface="Calibri"/>
+      </a:rPr><a:t>{label}</a:t></a:r>
+    </a:p>
+  </p:txBody>
+</p:sp>'''
+        xmls.append(label_xml)
+        sid += 1
+
+    # --- Line style entries ---
+    for j, (label, color_hex, is_dashed) in enumerate(line_entries):
+        ey = y + pad_top + title_h + (n_color + j) * row_h
+        line_y = ey + row_h // 2
+        dash_val = "dash" if is_dashed else "solid"
+
+        # Mini line sample using custom geometry
+        line_xml = f'''<p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:nvSpPr>
+    <p:cNvPr id="{sid}" name="Legend Line {j}"/>
+    <p:cNvSpPr/>
+    <p:nvPr/>
+  </p:nvSpPr>
+  <p:spPr>
+    <a:xfrm><a:off x="{x + line_sample_left}" y="{line_y}"/><a:ext cx="{line_sample_w}" cy="1"/></a:xfrm>
+    <a:custGeom>
+      <a:avLst/><a:gdLst/><a:ahLst/><a:cxnLst/>
+      <a:rect l="0" t="0" r="{line_sample_w}" b="1"/>
+      <a:pathLst>
+        <a:path w="{line_sample_w}" h="1">
+          <a:moveTo><a:pt x="0" y="0"/></a:moveTo>
+          <a:lnTo><a:pt x="{line_sample_w}" y="0"/></a:lnTo>
+        </a:path>
+      </a:pathLst>
+    </a:custGeom>
+    <a:noFill/>
+    <a:ln w="19050">
+      <a:solidFill><a:srgbClr val="{color_hex}"/></a:solidFill>
+      <a:prstDash val="{dash_val}"/>
+      <a:round/>
+    </a:ln>
+  </p:spPr>
+  <p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="en-US" dirty="0"/></a:p></p:txBody>
+</p:sp>'''
+        xmls.append(line_xml)
+        sid += 1
+
+        # Label text for line entry
+        line_label_left = line_sample_left + line_sample_w + 68580
+        line_label_w = legend_w - line_label_left - 45720
+
+        line_label_xml = f'''<p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:nvSpPr>
+    <p:cNvPr id="{sid}" name="Legend Line Label {j}"/>
+    <p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>
+    <p:nvPr/>
+  </p:nvSpPr>
+  <p:spPr>
+    <a:xfrm><a:off x="{x + line_label_left}" y="{ey}"/><a:ext cx="{line_label_w}" cy="{row_h}"/></a:xfrm>
+    <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+    <a:noFill/>
+    <a:ln><a:noFill/></a:ln>
+  </p:spPr>
+  <p:txBody>
+    <a:bodyPr wrap="square" anchor="ctr" lIns="0" tIns="0" rIns="0" bIns="0">
+      <a:normAutofit/>
+    </a:bodyPr>
+    <a:lstStyle/>
+    <a:p><a:pPr algn="l"/>
+      <a:r><a:rPr lang="en-US" sz="900" b="0" dirty="0">
+        <a:solidFill><a:srgbClr val="2C3E50"/></a:solidFill>
+        <a:latin typeface="Calibri"/>
+      </a:rPr><a:t>{label}</a:t></a:r>
+    </a:p>
+  </p:txBody>
+</p:sp>'''
+        xmls.append(line_label_xml)
+        sid += 1
+
+    return xmls, sid
+```
+
+### Usage Example
+
+```python
+from lxml import etree
+
+# Color entries from STYLE_COLORS dict
+color_entries = [
+    ("Interface", "4472C4"),
+    ("Event Bus", "ED7D31"),
+    ("Data Store", "70AD47"),
+    ("External", "5D6D7E"),
+]
+
+# Optional line style entries
+line_entries = [
+    ("Primary flow", "888888", False),
+    ("Optional/Async", "888888", True),
+]
+
+legend_xmls, sid = make_legend_xml(sid, color_entries, line_entries)
+for xml_str in legend_xmls:
+    spTree.append(etree.fromstring(xml_str))
+```
+
+### Integration Pattern
+
+When generating a diagram script, build the legend from the existing `STYLE_COLORS` dict (or equivalent) at the end, after all diagram shapes:
+
+```python
+# At end of script, after all diagram shapes:
+legend_entries = [(k.replace("_", " ").title(), v[0]) for k, v in STYLE_COLORS.items()]
+line_entries = [("Primary flow", "888888", False), ("Optional", "888888", True)]
+legend_xmls, sid = make_legend_xml(sid, legend_entries, line_entries)
+for xml_str in legend_xmls:
+    spTree.append(etree.fromstring(xml_str))
+```
+
+The legend is appended **last** in z-order so it renders on top of all other elements. Default position is **bottom-right** (matching PowerPoint/Excel chart legend convention and natural scan-path termination). Override `x`, `y` to place elsewhere if the bottom-right is occupied.
+
+---
+
+## Icon Embedding
+
+Add recognizable icons inside diagram shapes to improve semantic transparency — viewers recognize a component's purpose before reading the label. Icons are added as a **post-processing** step after the base PPTX is saved, keeping the diagram valid even if icon resolution fails.
+
+**Pipeline**: SVG → PNG via CairoSVG → embed via `add_picture()` (python-pptx cannot embed SVG natively).
+
+**Prerequisites**: `pip install cairosvg` (optional — only needed for Iconify API icons; local PNG files work without it).
+
+### Helper Function: `resolve_icon()`
+
+```python
+def resolve_icon(icon_key, size=64, tint="FFFFFF", cache_dir="/tmp/diagram_icons"):
+    """Resolve an icon key to a local PNG file path.
+
+    Resolution chain:
+    1. Local file path (contains / or ends in .png/.svg)
+    2. Iconify API (prefix:name format, e.g., "mdi:database")
+    3. Returns None if resolution fails
+
+    Args:
+        icon_key: Icon identifier string.
+        size: Icon size in pixels (width=height).
+        tint: Hex color for monochrome SVGs (e.g., "FFFFFF" for white).
+              Set to None to preserve original colors.
+        cache_dir: Directory for cached PNG files.
+
+    Returns:
+        Path to PNG file, or None if resolution failed.
+    """
+    import os
+    os.makedirs(cache_dir, exist_ok=True)
+
+    # --- Local file path ---
+    if "/" in icon_key or "\\" in icon_key or icon_key.endswith((".png", ".svg")):
+        if icon_key.endswith(".png"):
+            return icon_key if os.path.exists(icon_key) else None
+        if icon_key.endswith(".svg"):
+            if not os.path.exists(icon_key):
+                return None
+            try:
+                import cairosvg
+                png_path = os.path.join(cache_dir, os.path.basename(icon_key) + ".png")
+                with open(icon_key, "r") as f:
+                    svg_data = f.read()
+                if tint:
+                    svg_data = svg_data.replace("currentColor", f"#{tint}")
+                cairosvg.svg2png(bytestring=svg_data.encode(), write_to=png_path,
+                                 output_width=size, output_height=size)
+                return png_path
+            except ImportError:
+                print(f"  Warning: cairosvg not installed, cannot convert {icon_key}")
+                return None
+        return None
+
+    # --- Iconify API (prefix:name) ---
+    if ":" in icon_key:
+        tint_suffix = f"_{tint}" if tint else "_orig"
+        cache_name = f"{icon_key.replace(':', '_')}_{size}{tint_suffix}.png"
+        png_path = os.path.join(cache_dir, cache_name)
+        if os.path.exists(png_path):
+            return png_path
+        try:
+            import cairosvg
+            import urllib.request
+            prefix, name = icon_key.split(":", 1)
+            url = f"https://api.iconify.design/{prefix}/{name}.svg?width={size}&height={size}"
+            req = urllib.request.Request(url, headers={"User-Agent": "python-pptx-diagrams/1.0"})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                svg_data = resp.read().decode("utf-8")
+            if tint:
+                svg_data = svg_data.replace("currentColor", f"#{tint}")
+            cairosvg.svg2png(bytestring=svg_data.encode(), write_to=png_path,
+                             output_width=size, output_height=size)
+            return png_path
+        except ImportError:
+            print(f"  Warning: cairosvg not installed, skipping icon '{icon_key}'")
+            return None
+        except Exception as e:
+            print(f"  Warning: Failed to resolve icon '{icon_key}': {e}")
+            return None
+
+    return None
+```
+
+### Helper Function: `enrich_shape_with_icon()`
+
+```python
+def enrich_shape_with_icon(slide, shape_name, icon_path, icon_size_inches=0.35):
+    """Add an icon image above the text label inside a named shape.
+
+    Places a PNG picture element centered horizontally in the upper portion
+    of the shape, and modifies the shape's text body to push text below the icon.
+
+    Args:
+        slide: python-pptx Slide object.
+        shape_name: The name attribute of the target shape.
+        icon_path: Path to a PNG file.
+        icon_size_inches: Icon width and height in inches (square).
+
+    Returns:
+        True if icon was added, False if shape not found or error.
+    """
+    from pptx.util import Inches, Emu
+
+    target = None
+    for shape in slide.shapes:
+        if shape.name == shape_name:
+            target = shape
+            break
+    if target is None:
+        print(f"  Warning: Shape '{shape_name}' not found")
+        return False
+
+    icon_w = icon_h = Inches(icon_size_inches)
+    icon_left = target.left + (target.width - icon_w) // 2
+    icon_top = target.top + Emu(91440)  # 0.1" from top of shape
+
+    try:
+        slide.shapes.add_picture(icon_path, icon_left, icon_top, icon_w, icon_h)
+    except Exception as e:
+        print(f"  Warning: Failed to add icon to '{shape_name}': {e}")
+        return False
+
+    # Adjust text body — push text below icon
+    if target.has_text_frame:
+        ns = "http://schemas.openxmlformats.org/drawingml/2006/main"
+        body_pr = target.text_frame._txBody.find(f"{{{ns}}}bodyPr")
+        if body_pr is not None:
+            body_pr.set("tIns", "365760")  # 0.4" top inset
+            body_pr.set("anchor", "b")     # anchor text to bottom
+
+    return True
+```
+
+### Helper Function: `enrich_pptx_with_icons()`
+
+```python
+def enrich_pptx_with_icons(pptx_path, icon_map, output_path=None,
+                            icon_size=64, icon_size_inches=0.35,
+                            tint="FFFFFF", slide_index=0):
+    """Post-process a PPTX file to add icons to named shapes.
+
+    Args:
+        pptx_path: Path to existing PPTX file.
+        icon_map: Dict of {shape_name: icon_key} mappings.
+        output_path: Output path (defaults to overwriting pptx_path).
+        icon_size: Icon resolution in pixels for download/conversion.
+        icon_size_inches: Icon display size in the slide (inches).
+        tint: Default tint color for monochrome icons ("FFFFFF" = white).
+              Set to None to preserve original colors.
+        slide_index: Which slide to modify (0-indexed).
+
+    Returns:
+        List of (shape_name, success_bool) tuples.
+    """
+    from pptx import Presentation
+
+    prs = Presentation(pptx_path)
+    slide = prs.slides[slide_index]
+    results = []
+
+    for shape_name, icon_key in icon_map.items():
+        icon_path = resolve_icon(icon_key, size=icon_size, tint=tint)
+        if icon_path:
+            ok = enrich_shape_with_icon(slide, shape_name, icon_path, icon_size_inches)
+            results.append((shape_name, ok))
+        else:
+            results.append((shape_name, False))
+
+    prs.save(output_path or pptx_path)
+    return results
+```
+
+### Usage Example
+
+```python
+# After generating and saving the base diagram:
+ICONS = {
+    "web":    "mdi:web",
+    "auth":   "mdi:lock",
+    "udb":    "mdi:database",
+    "cache":  "mdi:flash",
+}
+
+results = enrich_pptx_with_icons("diagram.pptx", ICONS, tint="FFFFFF")
+added = sum(1 for _, ok in results if ok)
+print(f"Icons: {added}/{len(ICONS)} added successfully")
+```
+
+### Icon Key Formats
+
+| Format | Example | Resolution |
+|--------|---------|------------|
+| Local PNG | `/path/to/icon.png` | Used directly |
+| Local SVG | `./icons/db.svg` | Converted to PNG via CairoSVG |
+| Iconify | `mdi:database` | Downloaded from Iconify API, converted, cached |
+| Iconify | `tabler:cloud` | Same — any Iconify prefix:name works |
+| Iconify | `logos:aws-lambda` | Multi-color vendor logo (use `tint=None`) |
+
+### Common Iconify Prefixes for Diagrams
+
+| Prefix | Set | Icons | Style |
+|--------|-----|-------|-------|
+| `mdi` | Material Design Icons | ~7,000 | Filled, clean |
+| `tabler` | Tabler Icons | ~5,800 | 2px stroke, outline |
+| `ph` | Phosphor Icons | ~6,000 | Multiple weights |
+| `lucide` | Lucide | ~1,555 | Minimalist outline |
+| `logos` | SVG Logos | ~1,500 | Full-color brand logos |

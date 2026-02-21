@@ -10,6 +10,7 @@ Generate `.pptx` diagrams using `python-pptx` + OOXML/DrawingML XML. Each diagra
 
 ```bash
 pip install python-pptx lxml
+pip install cairosvg  # optional: enables icon support via Iconify API
 ```
 
 ## Workflow: 6-Phase Design Process
@@ -65,6 +66,8 @@ Before writing any code:
 4. **Size hierarchy**: Hub/primary = 1.3x, standard = 1.0x, secondary = 0.85x
 5. **Scan path**: Define the reader's eye movement (L→R for flow, top→down for hierarchy, center→out for radial). Entry points top-left, data stores lower (see `methodology.md` §1).
 6. **Typography**: One font family (Calibri default). Node labels 10-12pt, connector labels 9-10pt (see `methodology.md` §5.5).
+7. **Legend placement**: If the diagram uses 3+ semantic colors or 2+ line styles, plan a legend. Identify which corner has the most available space (default: bottom-right).
+8. **Icon assignment** (optional): If the diagram benefits from icons (architecture, deployment, hub-spoke), identify which shapes should have icons and assign Iconify keys (e.g., `mdi:database`, `tabler:cloud`) or local file paths. Icons are NOT appropriate for abstract flowcharts, org charts, or decision diagrams where shape presets already carry semantic meaning. See `methodology.md` §5.6.
 
 > **Gate**: Does the shape grammar use ≤4 core shapes? Are colors distinguishable under simulated color blindness (pair color with shape/line style)? If not → simplify; add secondary encoding.
 
@@ -81,6 +84,8 @@ While generating, apply:
 - **Connector discipline**: one connector style, orthogonal routing, ≤2 crossings per region (see `methodology.md` §5)
 - **Label hygiene**: nouns for nodes, verb phrases for connectors, max 2 lines per box (see `methodology.md` §5.5)
 - **Mental squint test**: if you blur the layout, can you still see the group structure and flow direction?
+- **Legend**: If the diagram uses 3+ semantic colors or 2+ line styles, include a `make_legend_xml()` call (see `references/reference.md`). Build entries from the `STYLE_COLORS` dict (or equivalent). Place the legend as the **last element** in z-order (on top). Default to **bottom-right**; use **bottom-left** if bottom-right is occupied by diagram content.
+- **Icons** (optional): If Phase 2 identified icon assignments, add an `ICONS` dict to the data section mapping component IDs to icon keys (Iconify `prefix:name` or local file paths). Include `resolve_icon()`, `enrich_shape_with_icon()`, and `enrich_pptx_with_icons()` helpers (see `references/reference.md`), and call `enrich_pptx_with_icons()` after `prs.save()`. Icons require `cairosvg` for SVG-to-PNG conversion.
 
 > **Gate**: Does the script run without errors? Does the PPTX open cleanly? If not → fix the code before continuing.
 
@@ -93,6 +98,23 @@ After the script passes the Phase 3 gate:
 3. Output is at `/tmp/<output>.pptx.png`
 
 > **Gate**: Script runs without errors, PPTX file created, PNG rendered successfully. If not → fix and re-run.
+
+#### Phase 3c: Enrich with Icons (Optional)
+
+If the diagram uses icons (defined by an `ICONS` dict in the script):
+
+1. The script's `enrich_pptx_with_icons()` call post-processes the saved PPTX
+2. For each icon assignment:
+   - Resolves the icon key (Iconify API download, SVG→PNG conversion, caching in `/tmp/diagram_icons/`)
+   - Places the icon centered in the upper portion of the target shape
+   - Adjusts text body to bottom-anchor, pushing the label below the icon
+3. Re-saves the PPTX
+
+Prerequisites: `pip install cairosvg` (in addition to python-pptx, lxml)
+
+If cairosvg is not installed, the enrichment step is skipped gracefully — the diagram is still valid without icons. A warning is printed listing which icons were skipped.
+
+> **Gate**: Icons render at correct size and position. Text labels remain readable below icons. If icons are missing (resolution failed), the diagram is still structurally valid.
 
 ### Phase 4: Validate (Structural + Visual)
 
@@ -220,6 +242,11 @@ After structural checks pass:
    - [ ] Connectors route cleanly — minimal crossings, no arrows through shapes/text
    - [ ] Title separated from content — no overlaps between title and diagram elements
    - [ ] Nothing clipped at edges — all shapes fully visible
+   - [ ] Legend present when diagram uses 3+ colors — entries match actual color→role mapping
+   - [ ] Legend does not overlap diagram content
+   - [ ] Icons (if present) are visible, correctly sized, and centered within shapes
+   - [ ] Text labels below icons are not clipped or overlapping the icon
+   - [ ] Icon style is consistent (all monochrome white, or all colored for vendor icons)
    - [ ] Professional appearance at presentation scale
 
 4. **Fix → re-run → re-render → re-inspect.** Max 3 total visual passes. After 3, report remaining issues to the user rather than looping indefinitely.
