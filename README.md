@@ -18,19 +18,19 @@ Multi-step iterative deep research with query decomposition, parallel web search
 
 **Output:** Research report saved to `~/Documents/research/[topic-slug]_[YYYYMMDD]/report.md` with companion `sources.md`.
 
-### [gemini-image](./gemini-image/)
+### [powerpoint-diagrams](./powerpoint-diagrams/)
 
-General-purpose image generation and analysis using Google Gemini. Generate images from text prompts or analyze/describe existing images with vision.
+Generative-first technical diagrams via python-pptx. Produces standalone Python scripts that generate native, editable PowerPoint diagrams with orthogonal routed connectors, gradient-filled shapes, and region-based layouts.
 
-**Triggers:** "generate image", "create image", "describe image", "analyze image", "image to text", "alt text", "gemini image"
+**Usage:** `/powerpoint-diagrams`
 
-**Workflows:**
-- **Image Generation** — text prompt → Gemini → PNG output (with aspect ratio and size control)
-- **Image Analysis** — image + prompt → Gemini vision → text description/analysis
+**Triggers:** "create a PowerPoint diagram", "make a flowchart in PowerPoint", "create an org chart", "make an architecture diagram", "generate a PPTX diagram", "draw a diagram in PowerPoint"
 
-**Output:** PNG image (generation) or text description (analysis)
+**Supported diagram types:** Architecture (hub-and-spoke, layered, L→R flow), Flowchart (linear, branching, decision), Org Chart, Process Flow
 
-**Dependencies:** `google-genai`, `python-dotenv`, `GEMINI_API_KEY` environment variable
+**Output:** `{name}.py` (standalone generator script) + `{name}.pptx` (diagram)
+
+**Dependencies:** `python-pptx`, `lxml`
 
 ### [prompt-runner](./prompt-runner/)
 
@@ -52,18 +52,6 @@ Interactive workflow for building, validating, and running prompt-dsl `.prompt` 
 
 **Dependencies:** `run_claude.py` (prompt-dsl runner), optionally `openpyxl` (XLSX), `python-docx` (Word output), `pdftotext` (PDF attachments)
 
-### [pptx-diagram](./pptx-diagram/)
-
-Creates technical diagram slides as PPTX files with native editable PowerPoint shapes. Generates a reference image via Gemini, extracts a structural description via Gemini vision, translates it into a JSON shape spec, and builds the PPTX with real shapes (rectangles, diamonds, arrows, connectors) that you can click, move, resize, and edit directly in PowerPoint.
-
-**Triggers:** "architecture diagram", "flowchart", "network diagram", "sequence diagram", "ER diagram", "system diagram", "data flow diagram", "CONOPS", "technical diagram"
-
-**Supported diagram types:** Architecture (basic, cloud, layered, integration), CONOPS (swim lane, phased timeline, operational context), Flowchart, Network, Sequence, ER, Data Flow
-
-**Output:** `{name}.pptx` + `{name}.png` (reference image) + `{name}.description.md` (alt text & metadata)
-
-**Dependencies:** Requires `scripts/generate_image.py` and `scripts/image_to_text.py` (Gemini API key via `GEMINI_API_KEY`), and `pptxgenjs` installed via npm.
-
 ## Installation
 
 Copy (or symlink) a skill directory into `~/.claude/skills/`:
@@ -71,21 +59,14 @@ Copy (or symlink) a skill directory into `~/.claude/skills/`:
 ```bash
 # Example: install skills
 cp -r deep-research ~/.claude/skills/deep-research
-cp -r gemini-image ~/.claude/skills/gemini-image
+cp -r powerpoint-diagrams ~/.claude/skills/powerpoint-diagrams
 cp -r prompt-runner ~/.claude/skills/prompt-runner
-cp -r pptx-diagram ~/.claude/skills/pptx-diagram
 ```
 
-For gemini-image and pptx-diagram, install the Python dependencies:
+For powerpoint-diagrams, install the Python dependencies:
 
 ```bash
-pip install google-genai python-dotenv
-```
-
-For pptx-diagram, also install the Node dependency:
-
-```bash
-npm install -g pptxgenjs
+pip install python-pptx lxml
 ```
 
 ## License
