@@ -1,10 +1,10 @@
 ---
-description: "This skill should be used when the user asks to 'create a PowerPoint diagram', 'make a flowchart in PowerPoint', 'create an org chart', 'make an architecture diagram', 'generate a PPTX diagram', 'create a .pptx file', 'draw a diagram in PowerPoint', 'add orthogonal connectors', or wants to create any visual diagram or chart to be saved as a .pptx file."
+description: "This skill should be used when the user asks to 'create a PowerPoint diagram', 'make a flowchart in PowerPoint', 'create an org chart', 'make an architecture diagram', 'generate a PPTX diagram', 'create a .pptx file', 'draw a diagram in PowerPoint', or wants to create any visual diagram or chart to be saved as a .pptx file."
 ---
 
 # PowerPoint Diagrams Skill
 
-Generate professional `.pptx` diagrams programmatically using `python-pptx` + direct OOXML/DrawingML XML injection.
+Generate `.pptx` diagrams using `python-pptx` + OOXML/DrawingML XML. Each diagram is designed from first principles — not copied from examples.
 
 ## Prerequisites
 
@@ -12,139 +12,316 @@ Generate professional `.pptx` diagrams programmatically using `python-pptx` + di
 pip install python-pptx lxml
 ```
 
-Requires PowerPoint (or LibreOffice Impress) locally to view the result. After generating, open with:
-```bash
-open diagram.pptx          # macOS
-start diagram.pptx         # Windows
-libreoffice diagram.pptx   # Linux
+## Workflow: 6-Phase Design Process
+
+Phases 1-2 are internal analysis. Do not narrate design decisions to the user unless asked. Only surface issues that require user input.
+
+### Phase 0: Interview & Scope
+
+Clarify the request before any design work. Ask the user when information is missing or ambiguous:
+
+- **Purpose**: "What question should this diagram answer?" (explain a flow? show deployment? compare options?)
+- **Audience**: Executive / PM / Developer / Security / Ops — pick one primary
+- **Diagram level**: Context / Container / Component / Sequence / Deployment (C4-inspired — don't mix levels in one view)
+- **Constraints**: Slide count, print vs screen, brand colors, existing notation conventions
+
+**Smart gating** — If the user's request already specifies purpose, audience, and scope clearly, skip the interview. Don't ask questions you can answer from context.
+
+Examples:
+- "Make a flowchart of our auth flow" → skip interview (diagram type and content are evident)
+- "Create an architecture diagram showing how our microservices communicate" → skip interview (purpose and scope are clear)
+- "Make me a diagram" → interview needed (purpose and scope are ambiguous)
+- "Diagram our system" → interview needed (which level? which audience?)
+
+> **Gate**: Is purpose, audience, and diagram level clear? If not → ask the user before proceeding.
+
+### Phase 1: Analyze & Deconstruct
+
+Build a semantic inventory of the user's request:
+
+1. **Classify elements** as node, edge, container, or annotation (see `methodology.md` §1)
+2. **Identify visual rhetoric**: sequential flow, hierarchy, containment, radial, network, or dependency
+3. **Assess complexity**: count nodes, edges, nesting levels. If >10 nodes or >3 nesting levels, plan multi-slide progressive disclosure.
+4. **Select layout algorithm** using this decision table:
+
+| Algorithm | Best for | Node limit | Key constraint |
+|-----------|----------|------------|----------------|
+| **Layered / Hierarchical** | DAGs, org charts, class hierarchies | 15-25 | Minimize edge crossings between layers |
+| **Hub-and-Spoke (Radial)** | API gateways, event buses, central coordinators | 8-12 spokes | Equal angular spacing; hub visually dominant |
+| **Orthogonal / Grid** | Mesh networks, matrix orgs, comparison charts | 16-20 | Strict row/column alignment |
+| **Swimlane** | Cross-cutting concerns, layered architectures | 3-5 lanes | Lane labels readable; inter-lane edges route vertically |
+| **Timeline / Phased** | Roadmaps, migration plans, sprint sequences | 5-8 phases | Equal phase width; shared horizontal axis |
+| **Force-directed (manual)** | Organic relationships, brainstorming | 8-12 | Use only when no hierarchy exists |
+
+> **Gate**: Can every element be classified unambiguously as node/edge/container/annotation? Is there exactly one layout algorithm selected? If not → re-read the request; ask user if domain is ambiguous.
+
+### Phase 2: Design Visual Grammar
+
+Before writing any code:
+
+1. **Shape mapping**: Assign a shape preset to each semantic role. Limit to 2-4 core shapes (see `methodology.md` §5).
+2. **Color assignment**: Pick 3-5 semantic colors from a palette in `reference.md`. Each color = one meaning across the diagram set.
+3. **Stroke hierarchy**: Primary flow = 2pt solid, secondary = 1.5pt solid, optional = 1pt dashed
+4. **Size hierarchy**: Hub/primary = 1.3x, standard = 1.0x, secondary = 0.85x
+5. **Scan path**: Define the reader's eye movement (L→R for flow, top→down for hierarchy, center→out for radial). Entry points top-left, data stores lower (see `methodology.md` §1).
+6. **Typography**: One font family (Calibri default). Node labels 10-12pt, connector labels 9-10pt (see `methodology.md` §5.5).
+
+> **Gate**: Does the shape grammar use ≤4 core shapes? Are colors distinguishable under simulated color blindness (pair color with shape/line style)? If not → simplify; add secondary encoding.
+
+### Phase 3: Generate Script
+
+Write a standalone Python script using python-pptx for layout + OOXML XML for visual effects.
+
+**Anti-pattern warning**: Do NOT copy an example and change labels. Generate from scratch based on Phase 1-2 analysis. Examples demonstrate techniques, not templates.
+
+While generating, apply:
+- **Grid alignment**: Snap to 8-pt grid; consistent margins (see `methodology.md` §2, §9)
+- **Gestalt grouping**: proximity for same-group nodes, common region for containers, similarity for same-role nodes (see `methodology.md` §3)
+- **Data-ink ratio**: every visual effect must encode information. Functional gradients/shadows only — no decorative effects (see `methodology.md` §4)
+- **Connector discipline**: one connector style, orthogonal routing, ≤2 crossings per region (see `methodology.md` §5)
+- **Label hygiene**: nouns for nodes, verb phrases for connectors, max 2 lines per box (see `methodology.md` §5.5)
+- **Mental squint test**: if you blur the layout, can you still see the group structure and flow direction?
+
+> **Gate**: Does the script run without errors? Does the PPTX open cleanly? If not → fix the code before continuing.
+
+#### Phase 3b: Run & Render
+
+After the script passes the Phase 3 gate:
+
+1. **Run the script**: `python3 <script>.py`
+2. **Render to PNG** (macOS): `qlmanage -t -s 1920 -o /tmp <output>.pptx`
+3. Output is at `/tmp/<output>.pptx.png`
+
+> **Gate**: Script runs without errors, PPTX file created, PNG rendered successfully. If not → fix and re-run.
+
+### Phase 4: Validate (Structural + Visual)
+
+Two-stage validation: programmatic checks first, then visual inspection.
+
+#### Phase 4a: Structural Checks (Programmatic)
+
+Copy the QC function below into a temp script (e.g., `/tmp/qc_check.py`), run it against the generated PPTX, and fix any reported issues before proceeding to visual inspection.
+
+```python
+"""Structural QC checker for python-pptx diagrams."""
+from pptx import Presentation
+from pptx.util import Inches, Emu
+import sys
+
+def run_qc(pptx_path):
+    prs = Presentation(pptx_path)
+    slide_w = prs.slide_width
+    slide_h = prs.slide_height
+    issues = []
+
+    for slide_idx, slide in enumerate(prs.slides):
+        shapes = list(slide.shapes)
+        rects = []  # (left, top, right, bottom, name, is_bg)
+
+        for s in shapes:
+            if not hasattr(s, 'left') or s.left is None:
+                continue
+            l, t = s.left, s.top
+            r, b = l + s.width, t + s.height
+            name = s.name or "(unnamed)"
+
+            # Out-of-bounds check
+            if r > slide_w:
+                over = (r - slide_w) / 914400
+                issues.append(f"Slide {slide_idx+1}: '{name}' extends {over:.2f}\" past right edge")
+            if b > slide_h:
+                over = (b - slide_h) / 914400
+                issues.append(f"Slide {slide_idx+1}: '{name}' extends {over:.2f}\" past bottom edge")
+
+            # Tight margin check (0.05" = 45720 EMU) — skip background and full-span shapes
+            is_bg = (s.width > slide_w * 0.9 and s.height > slide_h * 0.9)
+            is_full_span = (s.width > slide_w * 0.85 or s.height > slide_h * 0.85)
+            margin = 45720
+            if not is_full_span:
+                if l < margin:
+                    issues.append(f"Slide {slide_idx+1}: '{name}' within 0.05\" of left edge")
+                if t < margin:
+                    issues.append(f"Slide {slide_idx+1}: '{name}' within 0.05\" of top edge")
+                if r > slide_w - margin:
+                    issues.append(f"Slide {slide_idx+1}: '{name}' within 0.05\" of right edge")
+                if b > slide_h - margin:
+                    issues.append(f"Slide {slide_idx+1}: '{name}' within 0.05\" of bottom edge")
+
+            rects.append((l, t, r, b, name, is_bg))
+
+            # Text-to-shape fit check
+            if s.has_text_frame:
+                text = s.text_frame.text.strip()
+                if text:
+                    w_inches = s.width / 914400
+                    h_inches = s.height / 914400
+                    # Rough heuristic: 7pt per char width, 18pt per line height
+                    lines = text.split('\n')
+                    max_chars = max(len(line) for line in lines)
+                    needed_w = max_chars * 0.07 + 0.2  # 0.2" padding
+                    needed_h = len(lines) * 0.25 + 0.15  # 0.15" padding
+                    if w_inches < needed_w * 0.7:
+                        issues.append(f"Slide {slide_idx+1}: '{name}' may be too narrow for text '{text[:30]}...' ({w_inches:.1f}\" vs ~{needed_w:.1f}\" needed)")
+                    if h_inches < needed_h * 0.7:
+                        issues.append(f"Slide {slide_idx+1}: '{name}' may be too short for text '{text[:30]}...' ({h_inches:.1f}\" vs ~{needed_h:.1f}\" needed)")
+
+        # Overlap check — skip containment pairs and connector-on-connector
+        for i in range(len(rects)):
+            for j in range(i + 1, len(rects)):
+                l1, t1, r1, b1, n1, bg1 = rects[i]
+                l2, t2, r2, b2, n2, bg2 = rects[j]
+                if bg1 or bg2:
+                    continue
+                # Check if one fully contains the other (intentional containment)
+                if (l1 <= l2 and t1 <= t2 and r1 >= r2 and b1 >= b2):
+                    continue
+                if (l2 <= l1 and t2 <= t1 and r2 >= r1 and b2 >= b1):
+                    continue
+                # Check overlap
+                ox = max(0, min(r1, r2) - max(l1, l2))
+                oy = max(0, min(b1, b2) - max(t1, t2))
+                overlap_area = (ox / 914400) * (oy / 914400)  # sq inches
+                if overlap_area > 0.02:
+                    # Skip if either shape is a connector/arrow (endpoint overlaps are by design)
+                    if any(k in n1.lower() for k in ("connector", "arrow", "line")):
+                        continue
+                    if any(k in n2.lower() for k in ("connector", "arrow", "line")):
+                        continue
+                    issues.append(f"Slide {slide_idx+1}: '{n1}' and '{n2}' overlap by {overlap_area:.2f} sq in")
+
+    if issues:
+        print(f"QC FAILED — {len(issues)} issue(s):")
+        for issue in issues:
+            print(f"  - {issue}")
+    else:
+        print("QC PASSED — no structural issues found.")
+    return issues
+
+if __name__ == "__main__":
+    run_qc(sys.argv[1])
 ```
 
-## Workflow
+Run: `python3 /tmp/qc_check.py <output>.pptx`
 
-> **Use TaskCreate/TaskUpdate** to track each phase.
+Fix any reported issues in the generation script, re-run the script, re-check until clean.
 
-### Step 0: Check for prior context (optional)
+> **Gate**: Structural checker returns zero issues. If not → fix generation script and re-run.
 
-Ask if the user has:
-- A **cached plan** (Shape/Connection data from a previous diagram to reuse/modify)
-- An **existing .py script** to adapt
-- A **specific example** from `examples/` to start from
+#### Phase 4b: Visual Inspection
 
-If none (the common case), generate from scratch in Step 1.
+After structural checks pass:
 
-### Step 1: Extract diagram data from the prompt
+1. **Render** (or re-render): `qlmanage -t -s 1920 -o /tmp <output>.pptx`
+2. **View the PNG** using the Read tool on `/tmp/<output>.pptx.png`
+3. **Assess against visual checklist**:
+   - [ ] All text readable — no invisible/tiny labels
+   - [ ] Balanced layout — content uses available space; no excessive whitespace or crowding
+   - [ ] Shapes have clear boundaries — no floating text without containers
+   - [ ] Connectors route cleanly — minimal crossings, no arrows through shapes/text
+   - [ ] Title separated from content — no overlaps between title and diagram elements
+   - [ ] Nothing clipped at edges — all shapes fully visible
+   - [ ] Professional appearance at presentation scale
 
-Use `references/define-phase.md` as your primary guide:
-1. Classify diagram type (Request-to-Type table)
-2. Enumerate shapes, roles, labels
-3. Map roles to OOXML presets (Type-to-Shape tables)
-4. Derive connections from relationships
-5. Select palette and title
-6. Run the Extraction Checklist
-7. Write Shape/Connection/Diagram definitions as Python data
+4. **Fix → re-run → re-render → re-inspect.** Max 3 total visual passes. After 3, report remaining issues to the user rather than looping indefinitely.
 
-→ TaskCreate: "Define diagram data" · status: in_progress
+> **Gate**: Structural checks return zero issues AND visual inspection passes all checklist items. If not → iterate (up to 3 passes), then report.
 
-### Step 2: Write Define phase + QC1
+### Phase 5: Iterate
 
-Write the Define section using the script skeleton from `references/define-phase.md` Section 9.
-Copy dataclass definitions from `references/layout-engine.md` Phase 1.
-Run validate_definition() — QC1.
+Based on user feedback or QC findings:
 
-→ TaskUpdate: completed · TaskCreate: "Compute layout + QC2" · status: in_progress
+- Split into context + detail slides (see `methodology.md` §6)
+- Reduce secondary node size
+- Collapse symmetric branches with "x N" annotation
+- Remove optional edges from overview slide
+- Fix any anti-patterns identified in validation
 
-### Step 3: Write Compute + Validate + QC2
+**Important**: When iterating based on user feedback, re-run the full QC loop (Phase 4a structural checks + Phase 4b visual inspection) — not just the specific feedback item. Changes often have side effects on layout and spacing.
 
-Use `references/layout-engine.md` Phase 2 for layout functions and
-`references/diagram-patterns.md` for spacing/palettes.
-Run validate_layout() — QC2.
+## Platform Note
 
-→ TaskUpdate: completed · TaskCreate: "Render and verify" · status: in_progress
+The visual QC workflow (Phases 3b and 4b) uses `qlmanage`, which is macOS-native (Quick Look). On non-macOS platforms, skip the render/visual steps and rely on Phase 4a structural checks only. Note this limitation to the user.
 
-### Step 4: Write Render phase + QC3
+**qlmanage rendering limitation**: Quick Look does not render fills for certain shape presets (`flowChartProcess`, `flowChartTerminator`, `flowChartMagneticDisk`). These appear as invisible/empty shapes in the PNG. Use `roundRect` for shapes that must be visible during QC. The `flowChartDecision`, `roundRect`, `hexagon`, and `ellipse` presets render correctly. The affected presets DO render properly in actual PowerPoint — this is a qlmanage-only limitation.
 
-Use `references/layout-engine.md` Phase 4 for render functions and
-`references/ooxml-spec.md` for XML. Emit in z-order.
-Run validate_render() — QC3.
+## Anti-Patterns to Watch For
 
-### Step 5: Run the script
+These are the most common diagram failures. If you catch yourself doing any of these, stop and restructure:
 
-Execute, save .pptx, open and verify.
-→ TaskUpdate: completed
+- **"Everything in one diagram" mega-canvas** — split into a diagram set
+- **Random icon styles mixed together** — pick one style or use shape presets
+- **Many-to-many direct connections without hubs/buses** — introduce a hub node
+- **Decorative effects instead of structure** — keep only functional gradients/shadows
+- **Color used for aesthetics rather than encoding** — each color = one meaning
+- **Loops/cycles as tangled arrows** — use separate sequence view or route back-edges outside
+- **Paragraphs inside boxes** — max 2 lines; move detail to sub-diagram
+- **Mixing diagram levels in one view** — one level per view (context OR container OR component)
 
-## Shape Selection Guide
+See `methodology.md` §8 for the full anti-patterns reference.
 
-| Diagram element         | Preset name             |
-|------------------------|------------------------|
-| Process box            | `flowChartProcess`      |
-| Decision diamond       | `flowChartDecision`     |
-| Start/End (stadium)    | `flowChartTerminator`   |
-| Database cylinder      | `flowChartMagneticDisk` |
-| Document              | `flowChartDocument`     |
-| Rectangle             | `rect`                  |
-| Rounded rectangle     | `roundRect`             |
-| Ellipse / circle      | `ellipse`               |
-| Hexagon               | `hexagon`               |
-| Cloud                 | `cloud`                 |
-| Right arrow           | `rightArrow`            |
-| Chevron               | `chevron`               |
-| Note / sticky         | `folderCorner`          |
-| Speech bubble         | `wedgeRoundRectCallout` |
-| Star                  | `star5`                 |
+## Shape Preset Quick Reference
 
-See `references/ooxml-spec.md` for all 200+ preset names.
+| Element | Preset name |
+|---------|-------------|
+| Process box | `flowChartProcess` |
+| Decision diamond | `flowChartDecision` |
+| Start/End (stadium) | `flowChartTerminator` |
+| Database cylinder | `flowChartMagneticDisk` |
+| Document | `flowChartDocument` |
+| Rectangle | `rect` |
+| Rounded rectangle | `roundRect` |
+| Ellipse / circle | `ellipse` |
+| Hexagon | `hexagon` |
+| Cloud | `cloud` |
+| Right arrow | `rightArrow` |
+| Chevron | `chevron` |
+| Note / sticky | `folderCorner` |
+| Speech bubble | `wedgeRoundRectCallout` |
 
-## Connector Selection Guide
+## Connecting Shapes
 
-| Connector type         | Tag                  | Use when                              |
-|-----------------------|---------------------|---------------------------------------|
-| Orthogonal (default)  | `bentConnector3`    | **Most diagrams — proposal standard** |
-| Curved                | `curvedConnector3`  | Only when organic flow is intentional |
-| Straight              | `straightConnector1`| Minimalist / technical diagrams       |
+For orthogonal routing with smooth curved elbows (the professional standard), use the `build_routed_connector_xml()` helper from `references/reference.md`. It creates custom geometry paths (`a:custGeom`) with `a:arcTo` quarter-circle arcs at each turn — producing strictly horizontal/vertical lines with rounded corners, all as a single selectable shape. Define waypoints as `(x, y)` tuples where each consecutive pair differs in only x or y.
 
-**Always use `bentConnector3` (orthogonal routing) unless the user specifies otherwise.** Professional proposal diagrams use orthogonal (Manhattan) routing — connectors run parallel or perpendicular to slide margins. python-pptx's public connector API does not expose these connectors correctly — use the XML injection pattern from `references/python-pptx-api.md`.
+For simple straight arrows where source and target are aligned, a basic `straightConnector1` XML element also works.
 
-### Connection point indexes
-- `0` = top center
-- `1` = right center
-- `2` = bottom center
-- `3` = left center
+For radial/hub-spoke layouts, straight connectors from hub center to spoke centers work well.
 
-## Quality Checklist
+## Color Palettes
 
-QC runs at every phase: **DEFINE → QC1 → COMPUTE → QC2 → RENDER → QC3 → SAVE**
+See `references/reference.md` for 7 curated palettes including Professional Blue, Modern Green, AWS Orange, Dark Mode, and more.
 
-Before presenting the result:
-- [ ] Script runs without errors (`python diagram.py`)
-- [ ] **QC1**: `validate_definition()` passes — no duplicate IDs, no bad refs, no unknown presets
-- [ ] **QC2**: `validate_layout()` passes — no text overflow, no overlaps, endpoints aligned, flips consistent
-- [ ] **QC3**: `validate_render()` passes — element count matches, all XML IDs unique, z-order correct
-- [ ] File opens in PowerPoint without repair prompts
-- [ ] All arrows point in the correct direction (connectors use `flipH`/`flipV` when target is left/above source)
-- [ ] All text is visible (no overflow, font >= 10pt — validated by `estimate_font_size()`)
-- [ ] 90° elbows are visibly softened (`<a:prstDash>` BEFORE `<a:round/>` in `<a:ln>`)
-- [ ] Shape outlines have softened corners (`<a:round/>` inside shape `<a:ln>`)
-- [ ] Shape IDs are unique per slide (start at 2)
-- [ ] Connector bounding boxes span the gap between shapes (not zero-size)
-- [ ] Connectors rendered BELOW shapes (z-layer 2 < 3) — no lines visible on top of shapes
-- [ ] No shapes overlap unintentionally
-- [ ] Connectors use orthogonal routing (`bentConnector3`) — no diagonal or curved paths
-- [ ] Diagram follows 3-phase pattern with QC at each checkpoint: define → compute → render
+## Script Pattern
 
-## Additional Resources
+```python
+from pptx import Presentation
+from pptx.util import Inches, Emu
+from lxml import etree
 
-### Primary references (use these to generate)
-- **`references/define-phase.md`** — **Phase 1 guide** — decision trees, preset tables, script skeleton, worked examples
-- **`references/layout-engine.md`** — **Phases 2-4 guide** — dataclasses, layout functions, connector math, validation, render
+prs = Presentation()
+prs.slide_width = Emu(9144000)   # 10"
+prs.slide_height = Emu(5143500)  # 5.625"
+slide = prs.slides.add_slide(prs.slide_layouts[6])  # blank layout
+spTree = slide.shapes._spTree
 
-### Supporting references
-- `references/ooxml-spec.md` — shape presets, connector XML, effects, fills, units
-- `references/python-pptx-api.md` — low-level helpers
-- `references/diagram-patterns.md` — layout recipes, color palettes, typography
+# Add shapes via python-pptx API for positioning
+shape = slide.shapes.add_shape(...)
+shape.left, shape.top, shape.width, shape.height = ...
 
-### Examples (optional — not starting points)
-- `examples/flowchart.py` — reference: 5-step horizontal flow
-- `examples/org_chart.py` — reference: 3-level hierarchy
-- `examples/architecture_diagram.py` — reference: 3-lane swimlane
+# Inject OOXML XML for visual effects python-pptx doesn't expose
+xml = '''<p:sp xmlns:p="..." xmlns:a="...">...</p:sp>'''
+spTree.append(etree.fromstring(xml))
 
-> Do NOT copy an example and adapt it. Generate from scratch using the reference docs above.
+prs.save("diagram.pptx")
+```
+
+After generating, open with: `open diagram.pptx` (macOS) / `start diagram.pptx` (Windows)
+
+## Resources
+
+- **`references/reference.md`** — OOXML visual techniques, color palettes, DrawingML recipes, connector helpers
+- **`references/methodology.md`** — Design methodology: contract definition, semiotics, layout algorithms, Gestalt laws, Tufte principles, typography, accessibility, anti-patterns, default spec
+- **`examples/flowchart.py`** — Horizontal sequential flow with gradient fills
+- **`examples/org_chart.py`** — 3-level layered hierarchy with gradient cards
+- **`examples/architecture_diagram.py`** — Swimlane layout with containment regions
+- **`examples/branching_flowchart.py`** — Decision logic with double coding and loop-back routing
+- **`examples/hub_spoke_diagram.py`** — Radial hub-and-spoke with trigonometric positioning
