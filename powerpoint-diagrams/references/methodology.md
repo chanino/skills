@@ -17,6 +17,31 @@ Before any visual work, establish three things:
 
 ---
 
+## 0.5. Metadata & Lifecycle
+
+Every diagram should carry enough context to be understood months later without the original author present.
+
+### Required Metadata
+
+| Field | Format | Example |
+|-------|--------|---------|
+| Title | Descriptive name matching the purpose statement | "Auth Service — Container Diagram" |
+| Author | Person or team | "Platform Engineering" |
+| Date | ISO 8601 | `2026-02-21` |
+| Version | Semver or simple integer | `v2` or `1.3` |
+| Purpose statement | One sentence from §0 | "This diagram answers: How does a request flow from the user to the database?" |
+
+For diagram sets (3+ related slides), maintain a brief **change log** noting what changed between versions and why.
+
+### Retirement Rule
+
+Retire or archive diagrams that no longer accurately answer an active stakeholder question. Stale diagrams misinform more than missing diagrams.
+
+**Do**: Review diagram currency when the system it depicts changes. Update or retire promptly.
+**Don't**: Leave outdated diagrams in shared repositories without a visible "archived" or "superseded" label.
+
+---
+
 ## 1. Strategic Semiotics & Cognitive Mapping
 
 Before touching shapes, decompose the subject into semantic primitives.
@@ -186,16 +211,16 @@ Limit to **2-4 core shapes** per diagram. Additional shapes are allowed only whe
 - Prefer **orthogonal routing** for professional diagrams.
 - If more than **2 line crossings** occur in any region, restructure: introduce a hub/bus, reorder nodes, or split the diagram.
 
-**Don't**: Use double-headed arrows unless the relationship is truly bidirectional. Don't accept spaghetti — restructure instead.
+**Don't**: Use double-headed arrows — they imply bidirectional dependencies and confuse flow direction. If a relationship is truly bidirectional (e.g., request/response), **show two separate unidirectional flows** (preferred) or annotate a single arrow with request/response labels. Don't accept spaghetti — restructure instead.
 
 ### Stroke Hierarchy
 
-| Level | Width | Style | Use |
-|-------|-------|-------|-----|
-| Primary flow | 2pt (`25400`) | Solid | Main sequence, happy path |
-| Secondary flow | 1.5pt (`19050`) | Solid | Alternate paths, supporting edges |
-| Optional / async | 1pt (`12700`) | Dashed (`lgDash`) | Optional steps, async messages |
-| Back-edge / loop | 1pt (`12700`) | Dashed (`dash`) | Retry, feedback loops |
+| Level | Width | mm | Style | Use |
+|-------|-------|----|-------|-----|
+| Primary flow | 2pt (`25400`) | 0.71 | Solid | Main sequence, happy path |
+| Secondary flow | 1.5pt (`19050`) | 0.53 | Solid | Alternate paths, supporting edges |
+| Optional / async | 1pt (`12700`) | 0.35 | Dashed (`lgDash`) | Optional steps, async messages |
+| Back-edge / loop | 1pt (`12700`) | 0.35 | Dashed (`dash`) | Retry, feedback loops |
 
 ### Size Hierarchy
 
@@ -282,6 +307,15 @@ Icons add semantic recognition by leveraging existing mental models (a database 
 - **Don't**: Use icons smaller than 0.25" — they become unreadable at presentation scale
 - **Don't**: Mix icon sets (Material Design + Font Awesome + custom) in one diagram
 
+### Vendor Icon Integrity
+
+When using vendor-specific icons (cloud providers, SaaS products):
+
+- **Don't** stretch or recolor brand shapes arbitrarily — vendor icons have specific aspect ratios and color requirements
+- **Don't** substitute marketing logos for conceptual elements — use the official architecture icon sets
+- **Use current versions** — icon libraries update when services are renamed or retired (e.g., AWS Lambda icon changed in 2024)
+- Official architecture icon libraries: [AWS Architecture Icons](https://aws.amazon.com/architecture/icons/), [Azure Icon Collection](https://learn.microsoft.com/en-us/azure/architecture/icons/), [Google Cloud Icons](https://cloud.google.com/icons)
+
 ---
 
 ## 6. Progressive Disclosure
@@ -295,12 +329,22 @@ Icons add semantic recognition by leveraging existing mental models (a database 
 | >15 edges visible simultaneously | Group related edges; use a context slide showing groups, then detail slides per group |
 | Mixed audiences (executive + technical) | Create a summary slide (5-7 nodes, key relationships) followed by technical detail slides |
 
+### Cognitive Budget
+
+Perceptual maximums that complement the structural maximums above:
+
+- **5–9 primary elements per view** — Miller's Law (7±2 chunks). If you exceed 9 distinct focal elements, viewers lose track of relationships. Group related items to reduce the effective count.
+- **5-second rule** — The viewer should grasp the core message (what question is answered + primary flow direction) within 5 seconds of first seeing the diagram. If not, simplify or add a stronger visual entry point.
+
+These limits govern *perceptual* load; the structural triggers above (>10 nodes, >15 edges) govern *layout* density. Both must be satisfied.
+
 ### Diagram Set Strategy
 
 Ship as a **set**, not a single frame:
 - **L1 Context** → L2 Container → L3 Component → Sequence diagrams for loops/cycles
 - Keep **cross-diagram consistency**: same names, same icons, same color meanings
 - Navigation cue: consistent color coding between context and detail slides
+- **Diagram taxonomy reference**: Context, Container, Component, Deployment, Data-flow, Sequence, ERD, Network, State, Flowchart, User-flow — select the types that answer your stakeholders' questions
 
 **Don't**: Combine deployment + code-level + business workflow in one frame. Don't mix diagram levels.
 
@@ -346,7 +390,9 @@ For critical states, encode with **both** color and a secondary channel:
 
 ### Contrast & Cultural Neutrality
 
-- Body text on shapes: 4.5:1 contrast (WCAG AA). Large text (>18pt): 3:1.
+- **Body text** on shapes: **4.5:1** contrast ratio (WCAG 2.1 AA, SC 1.4.3)
+- **Large text** (18pt+ or 14pt+ bold): **3:1** contrast ratio
+- **Non-text graphics** — shape borders, connector arrows, icons against their background: **3:1** contrast ratio (WCAG 2.1 SC 1.4.11 "Non-text Contrast")
 - **Practical rule**: White text on dark fills (< `808080`), dark text on light fills (> `808080`).
 - Default flow: left-to-right. Avoid culture-specific color meanings and symbolic shapes.
 
@@ -378,8 +424,8 @@ Baseline values for consistent output. Override per-diagram only when the design
 | Grid unit | 8pt | 73152 |
 | Canvas margins | 48px | ~438912 |
 | Node corner radius | Small, consistent | — |
-| Primary line weight | 2pt | 25400 |
-| Secondary line weight | 1.5pt | 19050 |
+| Primary line weight | 2pt (0.71mm) | 25400 |
+| Secondary line weight | 1.5pt (0.53mm) | 19050 |
 | Arrowhead style | `triangle`, `med`/`med` | — |
 | Font family | Calibri | — |
 | Node label size | 10-12pt | `1000`-`1200` |

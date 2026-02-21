@@ -128,6 +128,7 @@ Copy the QC function below into a temp script (e.g., `/tmp/qc_check.py`), run it
 """Structural QC checker for python-pptx diagrams."""
 from pptx import Presentation
 from pptx.util import Inches, Emu
+from lxml import etree
 import sys
 
 def run_qc(pptx_path):
@@ -211,6 +212,119 @@ def run_qc(pptx_path):
                         continue
                     issues.append(f"Slide {slide_idx+1}: '{n1}' and '{n2}' overlap by {overlap_area:.2f} sq in")
 
+        # --- Font consistency check ---
+        fonts = set()
+        for s in shapes:
+            if s.has_text_frame:
+                for para in s.text_frame.paragraphs:
+                    for run in para.runs:
+                        if run.font and run.font.name:
+                            fonts.add(run.font.name)
+        # Fallback: check lxml for a:latin typeface attributes
+        nsmap = {"a": "http://schemas.openxmlformats.org/drawingml/2006/main"}
+        for s in shapes:
+            try:
+                for latin in s._element.findall(".//a:latin", nsmap):
+                    tf = latin.get("typeface")
+                    if tf:
+                        fonts.add(tf)
+            except Exception:
+                pass
+        if len(fonts) > 1:
+            issues.append(f"Slide {slide_idx+1}: {len(fonts)} font families detected ({', '.join(sorted(fonts))}) — prefer 1")
+
+        # --- Text line count check ---
+        for s in shapes:
+            if s.has_text_frame:
+                text = s.text_frame.text.strip()
+                if text:
+                    line_count = text.count('\n') + 1
+                    if line_count > 2:
+                        name = s.name or "(unnamed)"
+                        issues.append(f"Slide {slide_idx+1}: '{name}' has {line_count} lines of text (max 2)")
+
+        # --- Palette size check (exclude legend shapes) ---
+        fill_colors = set()
+        for s in shapes:
+            name_lower = (s.name or "").lower()
+            if any(k in name_lower for k in ("legend", "key")):
+                continue
+            try:
+                if s.fill and s.fill.type is not None:
+                    rgb = s.fill.fore_color.rgb
+                    if rgb:
+                        fill_colors.add(str(rgb))
+            except Exception:
+                pass
+        if len(fill_colors) > 6:
+            issues.append(f"Slide {slide_idx+1}: {len(fill_colors)} distinct fill colors (recommend ≤6)")
+
+        # --- Complexity: primary shapes (exclude backgrounds, connectors, labels, legends, pictures) ---
+        primary_count = 0
+        for s in shapes:
+            if not hasattr(s, 'left') or s.left is None:
+                continue
+            name_lower = (s.name or "").lower()
+            is_bg = (s.width > slide_w * 0.9 and s.height > slide_h * 0.9)
+            is_connector = any(k in name_lower for k in ("connector", "arrow", "line"))
+            is_label = any(k in name_lower for k in ("label", "caption", "annotation", "legend", "key"))
+            is_picture = hasattr(s, 'image')
+            if not is_bg and not is_connector and not is_label and not is_picture:
+                primary_count += 1
+        if primary_count > 10:
+            issues.append(f"Slide {slide_idx+1}: {primary_count} primary shapes (recommend ≤10 per slide)")
+
+        # --- Complexity: connectors ---
+        connector_count = sum(
+            1 for s in shapes
+            if any(k in (s.name or "").lower() for k in ("connector", "arrow", "line"))
+        )
+        if connector_count > 15:
+            issues.append(f"Slide {slide_idx+1}: {connector_count} connectors (recommend ≤15 per slide)")
+
+        # --- Legend presence check ---
+        if len(fill_colors) >= 3:
+            has_legend = any(
+                any(k in (s.name or "").lower() for k in ("legend", "key"))
+                for s in shapes
+            )
+            if not has_legend:
+                issues.append(f"Slide {slide_idx+1}: {len(fill_colors)} fill colors but no shape named 'legend' or 'key' found")
+
+        # --- Bidirectional arrow check ---
+        nsmap_p = {
+            "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
+            "p": "http://schemas.openxmlformats.org/presentationml/2006/main",
+        }
+        for s in shapes:
+            try:
+                head_end = s._element.find(".//a:headEnd", nsmap_p)
+                tail_end = s._element.find(".//a:tailEnd", nsmap_p)
+                if head_end is not None and tail_end is not None:
+                    h_type = head_end.get("type", "none")
+                    t_type = tail_end.get("type", "none")
+                    if h_type != "none" and t_type != "none":
+                        name = s.name or "(unnamed)"
+                        issues.append(f"Slide {slide_idx+1}: '{name}' has bidirectional arrows — prefer two unidirectional flows")
+            except Exception:
+                pass
+
+        # --- Title presence check ---
+        has_title = False
+        for s in shapes:
+            if s.has_text_frame:
+                for para in s.text_frame.paragraphs:
+                    for run in para.runs:
+                        if run.font and run.font.size and run.font.size >= 177800:  # 14pt
+                            has_title = True
+                            break
+                    if has_title:
+                        break
+            if has_title:
+                break
+        if not has_title:
+            issues.append(f"Slide {slide_idx+1}: no text ≥14pt found — may be missing a title")
+
     if issues:
         print(f"QC FAILED — {len(issues)} issue(s):")
         for issue in issues:
@@ -248,6 +362,10 @@ After structural checks pass:
    - [ ] Text labels below icons are not clipped or overlapping the icon
    - [ ] Icon style is consistent (all monochrome white, or all colored for vendor icons)
    - [ ] Professional appearance at presentation scale
+   - [ ] 5-second test: core message (question answered + flow direction) clear within 5 seconds
+   - [ ] Squint test passes: group structure, flow direction, and focal node identifiable when blurred
+   - [ ] No bidirectional arrows (two separate unidirectional flows preferred)
+   - [ ] Vendor icons (if present) not recolored, not stretched, at original aspect ratio
 
 4. **Fix → re-run → re-render → re-inspect.** Max 3 total visual passes. After 3, report remaining issues to the user rather than looping indefinitely.
 
