@@ -39,9 +39,10 @@ LANES = [
 ]
 
 # (id, text, preset, lane_idx, style)
-# NOTE: Using roundRect for all shapes because qlmanage Quick Look doesn't render
-# flowChartProcess or flowChartMagneticDisk fills. The shapes render correctly in
-# actual PowerPoint — this is a qlmanage limitation for visual QC only.
+# NOTE: Using roundRect for all shapes because qlmanage (macOS Quick Look) doesn't
+# render flowChartProcess or flowChartMagneticDisk fills. This workaround is only
+# needed for qlmanage QC — PowerPoint COM (Windows) renders all presets correctly.
+# See SKILL.md "Renderer Notes" for per-renderer limitations.
 COMPONENTS = [
     ("web",    "Web App",         "roundRect",  0, "primary"),
     ("mobile", "Mobile App",      "roundRect",  0, "primary"),

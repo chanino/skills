@@ -94,10 +94,29 @@ While generating, apply:
 After the script passes the Phase 3 gate:
 
 1. **Run the script**: `python3 <script>.py`
-2. **Render to PNG** (macOS): `qlmanage -t -s 1920 -o /tmp <output>.pptx`
-3. Output is at `/tmp/<output>.pptx.png`
+2. **Render to PNG** — use the renderer for the current platform:
 
-> **Gate**: Script runs without errors, PPTX file created, PNG rendered successfully. If not → fix and re-run.
+   **macOS (qlmanage):**
+   ```bash
+   qlmanage -t -s 1920 -o /tmp <output>.pptx
+   # Output: /tmp/<output>.pptx.png
+   ```
+
+   **Windows (PowerPoint COM):**
+   ```powershell
+   powershell -Command "
+     $ppt = New-Object -ComObject PowerPoint.Application;
+     $pres = $ppt.Presentations.Open((Resolve-Path '<output>.pptx').Path, [ref]$true, [ref]$true, [ref]$false);
+     $pres.Slides[1].Export((Join-Path $env:TEMP '<output>.png'), 'PNG', 1920);
+     $pres.Close();
+     $ppt.Quit()
+   "
+   # Output: %TEMP%\<output>.png
+   ```
+
+   **Platform detection**: `uname -s` returns `Darwin` on macOS. On Windows (PowerShell, CMD, or Git Bash), check for PowerPoint: `powershell -Command "(New-Object -ComObject PowerPoint.Application).Quit()"`. If neither renderer is available, skip visual QC and note this to the user.
+
+> **Gate**: Script runs without errors, PPTX file created, PNG rendered successfully. If renderer unavailable, gate passes with structural checks only (note to user).
 
 #### Phase 3c: Enrich with Icons (Optional)
 
@@ -347,8 +366,13 @@ Fix any reported issues in the generation script, re-run the script, re-check un
 
 After structural checks pass:
 
-1. **Render** (or re-render): `qlmanage -t -s 1920 -o /tmp <output>.pptx`
-2. **View the PNG** using the Read tool on `/tmp/<output>.pptx.png`
+1. **Render** (or re-render) using the platform renderer from Phase 3b:
+   - macOS: `qlmanage -t -s 1920 -o /tmp <output>.pptx`
+   - Windows: PowerShell COM export (see Phase 3b snippet)
+   - No renderer available: skip visual QC; rely on Phase 4a structural checks only
+2. **View the PNG** using the Read tool:
+   - macOS: `/tmp/<output>.pptx.png`
+   - Windows: `$env:TEMP\<output>.png`
 3. **Assess against visual checklist**:
    - [ ] All text readable — no invisible/tiny labels
    - [ ] Balanced layout — content uses available space; no excessive whitespace or crowding
@@ -369,7 +393,7 @@ After structural checks pass:
 
 4. **Fix → re-run → re-render → re-inspect.** Max 3 total visual passes. After 3, report remaining issues to the user rather than looping indefinitely.
 
-> **Gate**: Structural checks return zero issues AND visual inspection passes all checklist items. If not → iterate (up to 3 passes), then report.
+> **Gate**: Structural checks return zero issues AND visual inspection passes all checklist items. If renderer is unavailable, gate passes with structural checks only (note to user). If not → iterate (up to 3 passes), then report.
 
 ### Phase 5: Iterate
 
@@ -383,11 +407,24 @@ Based on user feedback or QC findings:
 
 **Important**: When iterating based on user feedback, re-run the full QC loop (Phase 4a structural checks + Phase 4b visual inspection) — not just the specific feedback item. Changes often have side effects on layout and spacing.
 
-## Platform Note
+## Renderer Notes
 
-The visual QC workflow (Phases 3b and 4b) uses `qlmanage`, which is macOS-native (Quick Look). On non-macOS platforms, skip the render/visual steps and rely on Phase 4a structural checks only. Note this limitation to the user.
+The visual QC workflow (Phases 3b and 4b) supports two renderers with automatic platform detection. PowerPoint is required to view and validate output files.
 
-**qlmanage rendering limitation**: Quick Look does not render fills for certain shape presets (`flowChartProcess`, `flowChartTerminator`, `flowChartMagneticDisk`). These appear as invisible/empty shapes in the PNG. Use `roundRect` for shapes that must be visible during QC. The `flowChartDecision`, `roundRect`, `hexagon`, and `ellipse` presets render correctly. The affected presets DO render properly in actual PowerPoint — this is a qlmanage-only limitation.
+| Platform | Renderer | Detection | Fidelity |
+|----------|----------|-----------|----------|
+| macOS | qlmanage (Quick Look) | Always available | Good (shape preset limitations below) |
+| Windows | PowerPoint COM | `powershell -Command "(New-Object -ComObject PowerPoint.Application).Quit()"` succeeds | Excellent — native engine, no limitations |
+
+**Renderer cascade**: On macOS, use qlmanage. On Windows, use PowerPoint COM. If unavailable, skip visual QC and rely on Phase 4a structural checks only.
+
+### qlmanage Limitations (macOS only)
+
+Quick Look does not render fills for certain shape presets (`flowChartProcess`, `flowChartTerminator`, `flowChartMagneticDisk`). These appear as invisible/empty shapes in the PNG. Use `roundRect` for shapes that must be visible during qlmanage QC. The `flowChartDecision`, `roundRect`, `hexagon`, and `ellipse` presets render correctly. The affected presets DO render properly in actual PowerPoint — this is a qlmanage-only limitation.
+
+### PowerPoint COM (Windows)
+
+No known shape preset limitations. All OOXML presets render correctly, including `flowChartProcess`, `flowChartTerminator`, and `flowChartMagneticDisk`. The `roundRect` workaround used for qlmanage is NOT needed — use the semantically correct preset for each element.
 
 ## Anti-Patterns to Watch For
 
