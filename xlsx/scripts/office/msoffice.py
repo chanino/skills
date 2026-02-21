@@ -26,9 +26,11 @@ if IS_WINDOWS:
 def _convert_to_pdf_macos(input_path: Path, pdf_path: Path) -> None:
     script = f'''
     tell application "Microsoft Excel"
+        activate
         open POSIX file "{input_path}"
+        delay 1
         set theWorkbook to active workbook
-        save theWorkbook in POSIX file "{pdf_path}" as PDF file format
+        save as (active sheet of theWorkbook) filename "{pdf_path}" file format PDF file format
         close theWorkbook saving no
     end tell
     '''

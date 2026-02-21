@@ -23,11 +23,13 @@ if IS_WINDOWS:
 def _accept_changes_macos(abs_output: str) -> tuple[None, str | None]:
     script = f'''
     tell application "Microsoft Word"
+        activate
         open POSIX file "{abs_output}"
+        delay 1
         set theDocument to active document
-        accept all revisions theDocument
+        accept all revisions of theDocument
         save theDocument
-        close theDocument
+        close theDocument saving no
     end tell
     '''
 

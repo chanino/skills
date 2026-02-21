@@ -27,7 +27,9 @@ if IS_WINDOWS:
 def _convert_to_pdf_macos(input_path: Path, pdf_path: Path) -> None:
     script = f'''
     tell application "Microsoft Word"
+        activate
         open POSIX file "{input_path}"
+        delay 1
         set theDocument to active document
         save as theDocument file name "{pdf_path}" file format format PDF
         close theDocument saving no
@@ -92,7 +94,9 @@ def convert_to_pdf(input_path: str, output_dir: str) -> Path:
 def _convert_doc_to_docx_macos(input_path: Path, docx_path: Path) -> None:
     script = f'''
     tell application "Microsoft Word"
+        activate
         open POSIX file "{input_path}"
+        delay 1
         set theDocument to active document
         save as theDocument file name "{docx_path}" file format format document
         close theDocument saving no

@@ -25,11 +25,13 @@ from openpyxl import load_workbook
 def _recalc_macos(abs_path: str, timeout: int) -> dict | None:
     script = f'''
     tell application "Microsoft Excel"
+        activate
         open POSIX file "{abs_path}"
+        delay 1
         set theWorkbook to active workbook
-        calculate theWorkbook
+        calculate
         save theWorkbook
-        close theWorkbook
+        close theWorkbook saving no
     end tell
     '''
 
