@@ -32,25 +32,23 @@ Generative-first technical diagrams via python-pptx. Produces standalone Python 
 
 **Dependencies:** `python-pptx`, `lxml`
 
-### [prompt-runner](./prompt-runner/)
+### [prompt-builder](./prompt-builder/)
 
-Interactive workflow for building, validating, and running prompt-dsl `.prompt` files that process data through Claude. Guides users from requirements gathering through `.prompt` file generation, validation, dry-run preview, execution, and result delivery.
+Build high-quality prompt-dsl `.prompt` files through an interview, construction, QC, and hand-off workflow. Helps users create batch processing workflows without writing Python. All artifacts are saved to organized slug directories (`~/claude/[slug]_[YYYYMMDD]/`).
 
-**Usage:** `/prompt-runner`
+**Usage:** `/prompt-builder`
 
-**Triggers:** "prompt runner", "batch process", "process spreadsheet", "process CSV", "process data with Claude", "generate from template", "batch Claude", "prompt pipeline"
+**Triggers:** "prompt builder", "build prompt", "create prompt file", "batch process", "process spreadsheet", "process CSV", "process data with Claude", "generate from template", "batch Claude", "prompt pipeline"
 
 **Phases:**
-1. **Interview** — Gather requirements via progressive questions
-2. **Validate** — Pre-flight checks on data files, attachments, dependencies
-3. **Generate** — Build a `.prompt` file from interview answers
-4. **Preview** — Dry-run to verify prompt structure
-5. **Execute** — Run the prompt file through Claude
-6. **Deliver** — Present results and remind about reuse
+1. **Understand** — Smart-gated interview (skipped if request is already clear)
+2. **Build** — Generate the `.prompt` file with correct DSL syntax
+3. **QC** — Structural validation, manual review checklist, dry-run preview
+4. **Hand Off** — Show run command, offer to execute, remind about reusability
 
-**Features:** CSV/XLSX/JSON data iteration, per-item output files, static and dynamic attachments, QC validation pipelines, Word `.docx` generation
+**Features:** CSV/XLSX/JSON/directory/glob iteration, `@validate` auto-retry, `@step` pipelines, `@attach` static and dynamic files, `@if`/`@else` conditionals, `@include` shared fragments, Word `.docx` output
 
-**Dependencies:** `run_claude.py` (prompt-dsl runner), optionally `openpyxl` (XLSX), `python-docx` (Word output), `pdftotext` (PDF attachments)
+**Dependencies:** `prompt-dsl` (pip package: `pip install prompt-dsl[all]`)
 
 ## Installation
 
@@ -60,7 +58,7 @@ Copy (or symlink) a skill directory into `~/.claude/skills/`:
 # Example: install skills
 cp -r deep-research ~/.claude/skills/deep-research
 cp -r powerpoint-diagrams ~/.claude/skills/powerpoint-diagrams
-cp -r prompt-runner ~/.claude/skills/prompt-runner
+cp -r prompt-builder ~/.claude/skills/prompt-builder
 ```
 
 For powerpoint-diagrams, install the Python dependencies:
