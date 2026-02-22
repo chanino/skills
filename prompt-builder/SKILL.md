@@ -120,7 +120,7 @@ Use this to ensure correct syntax for all directives.
 Build the file with these conventions:
 
 **Front-matter:**
-- `output:` — path relative to the .prompt file (e.g., `output/` for per_item, `output/results.md` for concatenate)
+- `output:` — use absolute path to ensure files land in the slug directory (e.g., `/Users/.../[slug]_[YYYYMMDD]/output/` for per_item). Relative paths resolve from the working directory, not the .prompt file.
 - `collect:` — strategy from interview
 - `vars:` — any user-defined variables (tone, constraints, etc.)
 - Do NOT use `data:` in front-matter — prefer `@foreach <source>` inline syntax
